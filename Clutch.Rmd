@@ -10,5 +10,71 @@ output: word_document
 #build a function to separate the clutch points from a given data set
 
 #Clutch Serving
-  #Separate out just the BYU player Serving
+  #Remove the opponent serving so just BYU is there
+  #Separate the hold points and the break points
+
+#
+
+#How are we going to deal with deuce points being both hold and break?
 ```
+
+```{r}
+#call our necessary libraries
+library(alr3)
+library(MASS)
+library(dplyr)
+```
+
+pservingonly function filters out opponents, leaving just BYU serving
+```{r}
+pservingonly<-function(rawdata){
+  joint<-filter(rawdata,rawdata$server=="P")
+}
+```
+
+highpressure function keeps only possible clutch points (a break or hold point)
+```{r}
+highpressure<-function(rawdata){
+  #just clutch points, no sorting for server
+hp<-rbind(
+    rawdata[(rawdata$player.points == 0 & rawdata$opp.points == 3),],
+    rawdata[(rawdata$player.points == 1 & rawdata$opp.points == 3),],
+    rawdata[(rawdata$player.points == 2 & rawdata$opp.points == 3),],
+    rawdata[(rawdata$player.points == 3 & rawdata$opp.points == 3),],
+    rawdata[(rawdata$player.points == 3 & rawdata$opp.points == 2),],
+    rawdata[(rawdata$player.points == 3 & rawdata$opp.points == 1),],
+    rawdata[(rawdata$player.points == 3 & rawdata$opp.points == 0),])
+  return(hp)
+}
+```
+
+lowpressure function keeps everything but clutch points
+```{r}
+lowpressure<-function(rawdata){
+  #just clutch points, no sorting for server
+lp<-rawdata[(rawdata$player.points != 3 & rawdata$opp.points != 3),]
+  return(lp)
+}
+```
+
+Let's read in Ethan's data
+```{r}
+#read it in and separate out just the parts we need
+ethantest<-read.csv("Ethan test.csv",header=T)[1:71,]
+ethanservingdata<-(cbind(ethantest[,c(11:12,14:16,18:21,22:24)],ethantest[,32]))
+ethanjoint<-as.tbl(ethanservingdata)
+colnames(ethanjoint)<-c("player.sets","opp.sets","player.games","opp.games","server", "player.points", "opp.points", "serve.result", "serve.location", "return.location", "result", "point.winner", "point.length")
+```
+
+Now let's test the functions on Ethan's Data
+```{r}
+ethanhp<-highpressure(ethanjoint)
+ethanlp<-lowpressure(ethanjoint)
+```
+
+
+Just a workspace chunk
+```{r}
+
+```
+
