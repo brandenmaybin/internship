@@ -15,7 +15,6 @@ output: word_document
 library(alr3)
 library(MASS)
 library(dplyr)
-library("xlsx")
 ```
 Just BYU Serving
 ```{r}
@@ -294,9 +293,6 @@ dfperc<-function(deuce,ad,joint)
 ```
 
 ```{r}
-#build an example data set out of an intramural match
-setwd("C:/Users/opham/OneDrive/Documents/BYU Women's Tennis")
-
 #read it in and separate out just the parts we need
 ethantest<-read.csv("Ethan test.csv",header=T)[1:71,]
 ethanservingdata<-(cbind(ethantest[,c(16,18:21,22:24)],ethantest[,32]))
@@ -308,14 +304,17 @@ colnames(ethanservingdata)<-c("server", "player.points", "opp.points", "serve.re
 ```{r}
 #now let's try to call all of these functions
 ethanservingdata<-pservingonly(ethanservingdata)
-deuceadcreator(ethanservingdata)
-courtdistfunc(ethandeuce,ethanad,ethanservingdata)
-acedistfunc(ethandeuce,ethanad,ethanservingdata)
-aceprobfunc(ethandeuce,ethanad,ethanservingdata)
-shortgamewinperc(ethandeuce,ethanad,ethanservingdata)
-firstcourtdist(ethandeuce,ethanad,ethanservingdata)
-secondcourtdist(ethandeuce,ethanad,ethanservingdata)
-dfperc(ethandeuce,ethanad,ethanservingdata)
+ethandaj<-deuceadcreator(ethanservingdata)
+  ethandeuce<-as.data.frame(ethandaj[1])
+  ethanad<-as.data.frame(ethandaj[2])
+  ethanjoint<-as.data.frame(ethandaj[3])
+courtdistfunc(ethandeuce,ethanad,ethanjoint)
+acedistfunc(ethandeuce,ethanad,ethanjoint)
+aceprobfunc(ethandeuce,ethanad,ethanjoint)
+shortgamewinperc(ethandeuce,ethanad,ethanjoint)
+firstcourtdist(ethandeuce,ethanad,ethanjoint)
+secondcourtdist(ethandeuce,ethanad,ethanjoint)
+dfperc(ethandeuce,ethanad,ethanjoint)
 ```
 
 
