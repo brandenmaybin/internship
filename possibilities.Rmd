@@ -1,0 +1,67 @@
+---
+title: "Possibilities"
+author: "Othon Hamill"
+date: "September 13, 2018"
+output: word_document
+---
+
+Here's the organized list of our thoughts for projects on September 13, 2018
+
+1. Player X Model
+  Use data from previous years to build a statistical model to predict match outcomes, percentages and weakpoints for a specific or specific players. It'd probably be pretty Bayesian based. It looks like we have 4 players who we possibly could use if we find their data in the system
+    Player      Year      BYU W:L   Last Year's Ratio
+    T. Beckman  Senior    62/63     (.858)
+    K. Cusick   Junior    53/48     (1.18)
+    S. Smith    Junior    54/34     (1.59)
+    P. Malkyh   Junior    43/29     (1.48)
+  ***We can also just set a camera up on court 1 to check a single player at a more detailed level
+    
+2. Momentum as observed in the result of the next point
+  Evaluating whether or not some players were more mentally tough than other players. We could either factor in the importance of each point or we could also factor in the result of the last point as possibly swaying results, which we would observe in higher Double Fault, Ace, Unforced error or winner percentages. 
+
+2a. Clutch serving
+  We work on a player by player basis seeing who double faults or aces in High Pressure situations. 
+  
+2b. Serving Analyses Player-by-player on both deuce and ad sides (Singles only)
+-Wide, body and line total%
+-W, B, L Ace Distributions
+-W, B, L Probability of an ace on a serve there
+-W, B, L short game winning %
+-First Serve %
+-Second Serve %
+-Double faults %
+-Ace %
+-Clutch Analyses (How do they serve in high pressure situations)
+-Comparison against Pro-rates?
+  
+3. Lefty V. Righty
+  Your typical lefty V. righty questions. Changes in winner location distributions or percentages or the lefty v righty serve advantages. 
+  
+4. Net Play or Serve Location work
+  Locations are weakly recorded in both points. There's no enough High quality data to be analyzed. 
+  
+  
+******************Things we could improve for the next times******************
+1. ATP Match Models
+2. Add in the shots that force errors to build a better W;L profile for points by including the shots that force erros int eh positive category where they were omitted last year
+3. Better Net Play recording
+4. Some sort of more detailed recording system
+5. Because there is no add played and the players chose which side to serve on, so we don't know which side they serve on at deuce. When we do our clutch analysis let's just take the joint serving percentages
+
+
+
+******************Applicable studies******************
+
+A MASTER'S THESIS ON FT SHOOTING FOR GEORGE MASON UNIVERSITY BASKETBALL
+http://mars.gmu.edu/xmlui/bitstream/handle/1920/10852/Johnson_thesis_2017.pdf?sequence=1&isAllowed=y
+
+ANOTHER STUDY ON CLUTCH TIME FT IN THE NBA
+http://www.slamonline.com/wp-content/uploads/2012/02/Choking-and-Excelling-at-the-Free-Throw-Line-Texas1.pdf
+
+A TENNIS STUDY COMPARING KEY STATISTICS BETWEEN PRO AND JUNIOR TENNIS PLAYERS
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5721178/
+
+http://www.tennisabstract.com/blog/category/clutch/
+http://www.tennisabstract.com/blog/category/hot-hand/
+http://www.tennisabstract.com/blog/category/momentum/
+

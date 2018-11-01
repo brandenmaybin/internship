@@ -1,0 +1,14 @@
+---
+title: "Clutch Work"
+author: "Othon Hamill"
+date: "October 24, 2018"
+output: word_document
+---
+
+```{r}
+#########################TO DO LIST############################
+#build a function to separate the clutch points from a given data set
+
+#Clutch Serving
+  #Separate out just the BYU player Serving
+```
