@@ -16,6 +16,9 @@ library(alr3)
 library(MASS)
 library(dplyr)
 ```
+
+###################  And the functions begin  #############################
+
 Just BYU Serving
 ```{r}
 pservingonly<-function(rawdata){
@@ -295,10 +298,10 @@ dfperc<-function(deuce,ad,joint)
 ```{r}
 #read it in and separate out just the parts we need
 ethantest<-read.csv("Ethan test.csv",header=T)[1:71,]
-ethanservingdata<-(cbind(ethantest[,c(16,18:21,22:24)],ethantest[,32]))
+ethanservingdata<-(cbind(ethantest[,c(11:12,14:16,18:21,22:24)],ethantest[,32]))
 ethanservingdata<-as.tbl(ethanservingdata)
 ethanservingdata<-filter(ethanservingdata,ethanservingdata$server=="P")
-colnames(ethanservingdata)<-c("server", "player.points", "opp.points", "serve.result", "serve.location", "return.location", "result", "point.winner", "point.length")
+colnames(ethanservingdata)<-c("player.sets","opp.sets","player.games","opp.games","server", "player.points", "opp.points", "serve.result", "serve.location", "return.location", "result", "point.winner", "point.length")
 ```
 
 ```{r}
