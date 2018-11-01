@@ -57,6 +57,58 @@ lp<-rawdata[(rawdata$player.points != 3 & rawdata$opp.points != 3),]
 }
 ```
 
+acefilter: Returns all aces in a given dataset
+```{r}
+acefilter<-function(dataset){
+  filter(dataset,dataset$serve.result=="A")
+}
+```
+
+dffilter: Returns all double faults in a given dataset
+```{r}
+dffilter<-function(dataset){
+  filter(dataset,dataset$serve.result=="D")
+}
+```
+
+scwins: Returns all short points won by winners or forced errors
+```{r}
+scwins<-function(dataset){
+  filter(dataset,dataset$point.length=="S" & dataset$point.winner=="P" & dataset$result %in% c("W","F"))
+}
+```
+
+
+Low Pressure Calculating function
+```{r}
+#we need to call 
+```
+
+BYU Hold Point Calculating function
+```{r}
+
+```
+
+BYU being broken Point Calculating function
+```{r}
+
+```
+
+Opp Hold Point Calculating function
+```{r}
+
+```
+
+Opp being broken Point Calculating function
+```{r}
+
+```
+
+Raw Combo Calculating function
+```{r}
+
+```
+
 Let's read in Ethan's data
 ```{r}
 #read it in and separate out just the parts we need
@@ -70,6 +122,7 @@ Now let's test the functions on Ethan's Data
 ```{r}
 ethanhp<-highpressure(ethanjoint)
 ethanlp<-lowpressure(ethanjoint)
+ethanscw<-scwins(ethanjoint)
 ```
 
 
