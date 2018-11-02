@@ -71,18 +71,35 @@ dffilter<-function(dataset){
 }
 ```
 
-scwins: Returns all short points won by winners or forced errors
+sclutchwins: Returns all short points won by BYU winners or opponent forced errors
 ```{r}
-scwins<-function(dataset){
+sclutchwins<-function(dataset){
   filter(dataset,dataset$point.length=="S" & dataset$point.winner=="P" & dataset$result %in% c("W","F"))
 }
 ```
 
-
+schokelosses: Returns all short points lost by opponent winners or BYU Forced errors 
 Low Pressure Calculating function
 ```{r}
-#we need to call 
+schokelosses<-function(dataset){
+  filter(dataset,dataset$point.length=="S" & dataset$point.winner=="O" & dataset$result %in% c("W","F"))
+}
 ```
+
+Serving Scoring function
+```{r}
+servingscore<-function(dataset){
+  clutch<-rbind(filter(dataset,dataset$point.winner=="P" & dataset$point.length=="S" & dataset$result %in% c("W","F") & dataset$server=="P"), filter(dataset, dataset$result=="A" & dataset$server=="P"))
+  choke<-rbind(filter(dataset,dataset$point.winner=="O" & dataset$point.length=="S" & dataset$result %in% c("W","F") & dataset$server=="P"), filter(dataset, dataset$result=="D" & dataset$server=="P"))
+  #we've got to decide values and methodology for clutch versus choke points. We've debated 1 and 0 with null ebign the mean, but at that point we just give a win percentage. What if we put null at -1?
+  
+  score<-c()
+    
+  return(score)
+}
+  
+```
+
 
 BYU Hold Point Calculating function
 ```{r}
@@ -122,7 +139,9 @@ Now let's test the functions on Ethan's Data
 ```{r}
 ethanhp<-highpressure(ethanjoint)
 ethanlp<-lowpressure(ethanjoint)
-ethanscw<-scwins(ethanjoint)
+ethansclutch<-sclutchwins(ethanjoint)
+ethanschoke<-schokelosses(ethanjoint)
+
 ```
 
 
