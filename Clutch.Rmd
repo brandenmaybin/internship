@@ -13,9 +13,11 @@ output: word_document
   #Remove the opponent serving so just BYU is there
   #Separate the hold points and the break points
 
-#
+#Choke
 
-#How are we going to deal with deuce points being both hold and break?
+#How are we going to deal with deuce points being both hold and break? Right now I'm including them in both, but we could just add another category since it's such a higher stress situation than a normal break or hold opprotunity
+
+#How are we going to deal with returns hit into the net? 
 ```
 
 ```{r}
@@ -91,34 +93,98 @@ Serving Scoring function
 servingscore<-function(dataset){
   clutch<-rbind(filter(dataset,dataset$point.winner=="P" & dataset$point.length=="S" & dataset$result %in% c("W","F") & dataset$server=="P"), filter(dataset, dataset$result=="A" & dataset$server=="P"))
   choke<-rbind(filter(dataset,dataset$point.winner=="O" & dataset$point.length=="S" & dataset$result %in% c("W","F") & dataset$server=="P"), filter(dataset, dataset$result=="D" & dataset$server=="P"))
-  #we've got to decide values and methodology for clutch versus choke points. We've debated 1 and 0 with null ebign the mean, but at that point we just give a win percentage. What if we put null at -1?
-  
-  score<-c()
-    
+  nullval<-dim(filter(dataset,dataset$server=="P"))[1]-dim(clutch)[1]-dim(choke)[1]
+  #we can add in modifiers if we so desire here turning our score into a single value instead of 3 separate pieces
+  score<-c(dim(clutch)[1],dim(choke)[1],nullval)
   return(score)
 }
-  
+```
+
+Play Scoring function
+```{r}
+playscore<-function(dataset){
+  clutch<-filter(dataset,dataset$point.winner=="P" & dataset$result %in% c("W","F"))
+  choke<-filter(dataset,dataset$point.winner=="O" & dataset$result == "U")
+  nullval<-rbind(filter(dataset,dataset$point.winner=="P" & dataset$result == "U"), filter(dataset,dataset$point.winner=="O" & dataset$result %in% c("W","F")))
+  #we can add in modifiers if we so desire here
+  score<-c(dim(clutch)[1],dim(choke)[1],dim(nullval)[1])
+  return(score)
+}
+```
+
+Serving + Play Clutch Score
+```{r}
+clutchscore<-function(dataset){
+  score<-playscore(dataset)+servingscore(dataset)
+  return(score)
+}
 ```
 
 
 BYU Hold Point Calculating function
 ```{r}
-
+BYUholdcolumn<-function(dataset){
+  #build the BYU holding data frame including the deuce points
+  byuholddf<-rbind(
+    dataset[(dataset$player.points == 3 & dataset$opp.points == 3) & dataset$server== "P",],
+    dataset[(dataset$player.points == 3 & dataset$opp.points == 2) & dataset$server== "P",],
+    dataset[(dataset$player.points == 3 & dataset$opp.points == 1) & dataset$server== "P",],
+    dataset[(dataset$player.points == 3 & dataset$opp.points == 0) & dataset$server== "P",])
+  byuholdservingscore<-servingscore(byuholddf)
+  byuholdplayscore<-playscore(byuholddf)
+  byuholdclutchscore<-clutchscore(byuholddf)
+  byuholdscores<-list(byuholdservingscore,byuholdplayscore,byuholdclutchscore)
+  return(byuholdscores)
+}
 ```
 
 BYU being broken Point Calculating function
 ```{r}
-
+BYUbreakcolumn<-function(dataset){
+  #build the BYU to be broken data frame including the deuce points
+  byubreakdf<-rbind(
+    dataset[(dataset$player.points == 3 & dataset$opp.points == 3) & dataset$server== "P",],
+    dataset[(dataset$player.points == 2 & dataset$opp.points == 3) & dataset$server== "P",],
+    dataset[(dataset$player.points == 1 & dataset$opp.points == 3) & dataset$server== "P",],
+    dataset[(dataset$player.points == 0 & dataset$opp.points == 3) & dataset$server== "P",])
+  byubreakservingscore<-servingscore(byubreakdf)
+  byubreakplayscore<-playscore(byubreakdf)
+  byubreakclutchscore<-clutchscore(byubreakdf)
+  byubreakscores<-list(byubreakservingscore,byubreakplayscore,byubreakclutchscore)
+  return(byubreakscores)
+}
 ```
 
 Opp Hold Point Calculating function
 ```{r}
-
+oppholdcolumn<-function(dataset){
+  #build the opp holding data frame including the deuce points
+  oppholddf<-rbind(
+    dataset[(dataset$player.points == 3 & dataset$opp.points == 3) & dataset$server== "O",],
+    dataset[(dataset$player.points == 2 & dataset$opp.points == 3) & dataset$server== "O",],
+    dataset[(dataset$player.points == 1 & dataset$opp.points == 3) & dataset$server== "O",],
+    dataset[(dataset$player.points == 0 & dataset$opp.points == 3) & dataset$server== "O",])
+  oppholdplayscore<-playscore(oppholddf)
+  oppholdclutchscore<-clutchscore(oppholddf)
+  oppholdscores<-list(oppholdplayscore,oppholdclutchscore)
+  return(oppholdscores)
+}
 ```
 
 Opp being broken Point Calculating function
 ```{r}
-
+oppbreakcolumn<-function(dataset){
+  #build the opp breaking data frame including the deuce points
+  oppbreakdf<-rbind(
+    dataset[(dataset$player.points == 3 & dataset$opp.points == 3) & dataset$server== "O",],
+    dataset[(dataset$player.points == 3 & dataset$opp.points == 2) & dataset$server== "O",],
+    dataset[(dataset$player.points == 3 & dataset$opp.points == 1) & dataset$server== "O",],
+    dataset[(dataset$player.points == 3 & dataset$opp.points == 0) & dataset$server== "O",])
+  oppbreakplayscore<-playscore(oppbreakdf)
+  oppbreakclutchscore<-clutchscore(oppbreakdf)
+  oppbreakscores<-list(oppbreakplayscore,oppbreakclutchscore)
+  return(oppbreakscores)
+}
 ```
 
 Raw Combo Calculating function
@@ -135,13 +201,28 @@ ethanjoint<-as.tbl(ethanservingdata)
 colnames(ethanjoint)<-c("player.sets","opp.sets","player.games","opp.games","server", "player.points", "opp.points", "serve.result", "serve.location", "return.location", "result", "point.winner", "point.length")
 ```
 
-Now let's test the functions on Ethan's Data
+Now let's test the simple functions on Ethan's Data
 ```{r}
 ethanhp<-highpressure(ethanjoint)
 ethanlp<-lowpressure(ethanjoint)
 ethansclutch<-sclutchwins(ethanjoint)
 ethanschoke<-schokelosses(ethanjoint)
+servingscore(ethanjoint) #add to 36 which is our # of times P served
+playscore(ethanjoint) #total is 44, so we need to prove we discount 27. Which is exactly the number of times the result is either empty, "A" or "D"
+clutchscore(ethanjoint) #works out fine
+```
 
+Now we're into the complicated stuff that actually generates what values will be scored and then put into the table
+```{r}
+#concern: With the Ethan data returns into the net weren't logged as forced or unforced errors...
+ethanBYUhold<-BYUholdcolumn(ethanjoint)
+ethanBYUhold
+ethanBYUbreak<-BYUbreakcolumn(ethanjoint)
+ethanBYUbreak
+ethanopphold<-oppholdcolumn(ethanjoint)
+ethanopphold
+ethanoppbreak<-oppbreakcolumn(ethanjoint)
+ethanoppbreak
 ```
 
 
