@@ -181,9 +181,9 @@ oppbreakcolumn<-function(dataset){
 }
 ```
 
-Raw Combo Calculating function
+Raw Combo makes the raw combo column in the clutch table. It should return a list of 3, each with 3 elements
 ```{r}
-RawCombo<-function(dataset){
+weightedcombo<-function(dataset){
   #read in the four pressure column situations
   BYUhold<-BYUholdcolumn(dataset)
   BYUbreak<-BYUbreakcolumn(dataset)
@@ -194,10 +194,10 @@ RawCombo<-function(dataset){
   rawcombocolumn<-NULL
 
   
-  rawcombocolumn[1]<-for(i in 1:3){
-    serves<-unlist(BYUhold[1])[1]+unlist(BYUbreak[1])[1]
-    play<-
-  }
+  rawcombocolumn[1]<-list(
+    serves<-unlist(BYUhold[1])[1]+unlist(BYUbreak[1])[1],
+    play<-unlist(BYUhold[1])[2]+unlist(BYUbreak[1])[2]+unlist(opphold[1])[1]+unlist(oppbreak[1])[1],
+    s&pscore<-unlist(BYUhold[1])[1]+unlist(BYUbreak[1])[1])
     
     unlist(BYUhold[1])[1]+unlist(BYUbreak[1])[1]
   rawcombocolumn[2]<-unlist(BYUhold[1])[1]+unlist(BYUbreak[1])[1]
@@ -228,26 +228,22 @@ playscore(ethanjoint) #total is 44, so we need to prove we discount 27. Which is
 clutchscore(ethanjoint) #works out fine
 ```
 
-Now we're into the complicated stuff that actually generates what values will be scored and then put into the table
+Generates what values will be scored and THEN put into the table. These are values, not actual scores yet. 
 ```{r}
 #concern: With the Ethan data serve returns into the net weren't logged as forced or unforced errors...
-ethanBYUhold<-BYUholdcolumn(ethanjoint)
-ethanBYUhold
-ethanBYUbreak<-BYUbreakcolumn(ethanjoint)
-ethanBYUbreak
-ethanopphold<-oppholdcolumn(ethanjoint)
-ethanopphold
-ethanoppbreak<-oppbreakcolumn(ethanjoint)
-ethanoppbreak
-ethanrawcombo<-RawCombo(ethanjoint)
+#BUT, all the functions are verified to work fine otherwise as of Nov 12
+
+(ethanNONclutchsit<-list(servingscore(ethanlp),playscore(ethanlp),clutchscore(ethanlp)))
+(ethanBYUhold<-BYUholdcolumn(ethanjoint))
+(ethanBYUbreak<-BYUbreakcolumn(ethanjoint))
+(ethanopphold<-oppholdcolumn(ethanjoint))
+(ethanoppbreak<-oppbreakcolumn(ethanjoint))
+(ethanrawcombo<-rawcombo(ethanjoint))
 ```
 
 
 Just a workspace chunk
 ```{r}
-  rawcombocolumn<-NULL
-unlist(ethanBYUhold[1])[1]
-  rawcombocolumn[1]<-unlist(ethanBYUhold[1]) + unlist(ethanBYUbreak[1])
-  rawcombocolumn
+
 ```
 
