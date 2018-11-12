@@ -7,13 +7,7 @@ output: word_document
 
 ```{r}
 #########################TO DO LIST############################
-#build a function to separate the clutch points from a given data set
-
-#Clutch Serving
-  #Remove the opponent serving so just BYU is there
-  #Separate the hold points and the break points
-
-#Choke
+#Weights is the current issue. Whether clutch play and serves are equally valued as well as the actual values for clutch, null, and choke
 
 #How are we going to deal with deuce points being both hold and break? Right now I'm including them in both, but we could just add another category since it's such a higher stress situation than a normal break or hold opprotunity
 
@@ -189,7 +183,29 @@ oppbreakcolumn<-function(dataset){
 
 Raw Combo Calculating function
 ```{r}
+RawCombo<-function(dataset){
+  #read in the four pressure column situations
+  BYUhold<-BYUholdcolumn(dataset)
+  BYUbreak<-BYUbreakcolumn(dataset)
+  opphold<-oppholdcolumn(dataset)
+  oppbreak<-oppbreakcolumn(data)
+  
+  #initialize and then fill in rawcombocolumn
+  rawcombocolumn<-NULL
 
+  
+  rawcombocolumn[1]<-for(i in 1:3){
+    serves<-unlist(BYUhold[1])[1]+unlist(BYUbreak[1])[1]
+    play<-
+  }
+    
+    unlist(BYUhold[1])[1]+unlist(BYUbreak[1])[1]
+  rawcombocolumn[2]<-unlist(BYUhold[1])[1]+unlist(BYUbreak[1])[1]
+  
+  rawcombocolumn<-c(
+    sum(BYUholdcolumn,BYUbreakcolumn, oppholdcolumn, oppbreakcolumn))
+  return(rawcombocolumn)
+}
 ```
 
 Let's read in Ethan's data
@@ -214,7 +230,7 @@ clutchscore(ethanjoint) #works out fine
 
 Now we're into the complicated stuff that actually generates what values will be scored and then put into the table
 ```{r}
-#concern: With the Ethan data returns into the net weren't logged as forced or unforced errors...
+#concern: With the Ethan data serve returns into the net weren't logged as forced or unforced errors...
 ethanBYUhold<-BYUholdcolumn(ethanjoint)
 ethanBYUhold
 ethanBYUbreak<-BYUbreakcolumn(ethanjoint)
@@ -223,11 +239,15 @@ ethanopphold<-oppholdcolumn(ethanjoint)
 ethanopphold
 ethanoppbreak<-oppbreakcolumn(ethanjoint)
 ethanoppbreak
+ethanrawcombo<-RawCombo(ethanjoint)
 ```
 
 
 Just a workspace chunk
 ```{r}
-
+  rawcombocolumn<-NULL
+unlist(ethanBYUhold[1])[1]
+  rawcombocolumn[1]<-unlist(ethanBYUhold[1]) + unlist(ethanBYUbreak[1])
+  rawcombocolumn
 ```
 
