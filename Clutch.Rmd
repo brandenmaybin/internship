@@ -213,8 +213,9 @@ rawcombo<-function(dataset){
 }
 ```
 
+The Wieghted combo function takes a dataset and a weight vector of length 12 it can apply to each combination of OPP/BYU/HOLD/BREAK being clutch, choke or neutral. It doesn't account for specific high-stress points, like a match points vs. a hold point in the first set. 
 ```{r}
-wcombo<-function(dataset,weights){
+wcombo<-function(dataset,weights=c(rep(1,times=12))){
   #read in the four pressure column situations
   BYUhold<-BYUholdcolumn(dataset)
   BYUbreak<-BYUbreakcolumn(dataset)
@@ -245,6 +246,22 @@ wcombo<-function(dataset,weights){
 ```
 
 
+fullanalysismatrix calls all our previous functions and turns them into a matrix that looks like our table we have under clutch analysis
+```{r}
+fullanalysismatrix<-function(dataset,weights=c(rep(1,times=12))){
+  MATRIX<-matrix(data=NULL,nrow=3,ncol = 7)
+  rownames(MATRIX)<-c("Clutch Serving Score","Clutch Playing Score", "OVERALL CLUTCH SCORE")
+  colnames(MATRIX)<-c("Low Pressure Situations","BYU Hold", "")
+  return(MATRIX)
+}
+```
+
+
+
+
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~WORKING EXAMPLES~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~``
+
 Let's read in Ethan's data
 ```{r}
 #read it in and separate out just the parts we need
@@ -271,7 +288,6 @@ Generates what values will be scored and THEN put into the table. These are valu
 #BUT, all the functions are verified to work fine otherwise as of Nov 12
 
 #weights for the wcombo
-w<-rep(1,times=12)
 
 (ethanNONclutchsit<-list(servingscore(ethanlp),playscore(ethanlp),clutchscore(ethanlp)))
 (ethanBYUhold<-BYUholdcolumn(ethanjoint))
@@ -279,39 +295,13 @@ w<-rep(1,times=12)
 (ethanopphold<-oppholdcolumn(ethanjoint))
 (ethanoppbreak<-oppbreakcolumn(ethanjoint))
 (ethanrawcombo<-rawcombo(ethanjoint))
-(ethanwcombo<-wcombo(ethanjoint,w))
+(ethanwcombo<-wcombo(ethanjoint)) #could add an additional vector for weights, otherwise it computes raw currently
 ```
 
 
 Just a workspace chunk
 ```{r}
-  dataset<-ethanjoint
 
-  #read in the four pressure column situations
-  BYUhold<-BYUholdcolumn(dataset)
-  BYUbreak<-BYUbreakcolumn(dataset)
-  opphold<-oppholdcolumn(dataset)
-  oppbreak<-oppbreakcolumn(dataset)
-  
-  #initialize and then fill in wcombocolumn
-  wcombocolumn<-NULL
-  
-    s<-unlist(BYUhold[1])[1]+unlist(BYUbreak[1])[1]
-    p<-unlist(BYUhold[1])[2]+unlist(BYUbreak[1])[2]
-    c<-unlist(BYUhold[1])[3]+unlist(BYUbreak[1])[3]
-    top<-c(s,p,c)
-    
-    s<-unlist(BYUhold[2])[1]+unlist(BYUbreak[2])[1]+unlist(opphold[1])[1]+unlist(oppbreak[1])[1]
-    p<-unlist(BYUhold[2])[2]+unlist(BYUbreak[2])[2]+unlist(opphold[1])[2]+unlist(oppbreak[1])[2]
-    c<-unlist(BYUhold[2])[3]+unlist(BYUbreak[2])[3]+unlist(opphold[1])[3]+unlist(oppbreak[1])[3]
-    middle<-c(s,p,c)
-    
-    s<-unlist(BYUhold[3])[1]+unlist(BYUbreak[3])[1]+unlist(opphold[2])[1]+unlist(oppbreak[2])[1]
-    p<-unlist(BYUhold[3])[2]+unlist(BYUbreak[3])[2]+unlist(opphold[2])[2]+unlist(oppbreak[2])[2]
-    c<-unlist(BYUhold[3])[3]+unlist(BYUbreak[3])[3]+unlist(opphold[2])[3]+unlist(oppbreak[2])[3]
-    bottom<-c(s,p,c)
-  
-  wcombocolumn<-list(top,middle,bottom)
 
 ```
 
