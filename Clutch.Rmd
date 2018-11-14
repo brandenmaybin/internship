@@ -183,30 +183,67 @@ oppbreakcolumn<-function(dataset){
 
 Raw Combo makes the raw combo column in the clutch table. It should return a list of 3, each with 3 elements
 ```{r}
-weightedcombo<-function(dataset){
+rawcombo<-function(dataset){
   #read in the four pressure column situations
   BYUhold<-BYUholdcolumn(dataset)
   BYUbreak<-BYUbreakcolumn(dataset)
   opphold<-oppholdcolumn(dataset)
-  oppbreak<-oppbreakcolumn(data)
+  oppbreak<-oppbreakcolumn(dataset)
   
   #initialize and then fill in rawcombocolumn
   rawcombocolumn<-NULL
-
   
-  rawcombocolumn[1]<-list(
-    serves<-unlist(BYUhold[1])[1]+unlist(BYUbreak[1])[1],
-    play<-unlist(BYUhold[1])[2]+unlist(BYUbreak[1])[2]+unlist(opphold[1])[1]+unlist(oppbreak[1])[1],
-    s&pscore<-unlist(BYUhold[1])[1]+unlist(BYUbreak[1])[1])
+    s<-unlist(BYUhold[1])[1]+unlist(BYUbreak[1])[1]
+    p<-unlist(BYUhold[1])[2]+unlist(BYUbreak[1])[2]
+    c<-unlist(BYUhold[1])[3]+unlist(BYUbreak[1])[3]
+    top<-c(s,p,c)
     
-    unlist(BYUhold[1])[1]+unlist(BYUbreak[1])[1]
-  rawcombocolumn[2]<-unlist(BYUhold[1])[1]+unlist(BYUbreak[1])[1]
+    s<-unlist(BYUhold[2])[1]+unlist(BYUbreak[2])[1]+unlist(opphold[1])[1]+unlist(oppbreak[1])[1]
+    p<-unlist(BYUhold[2])[2]+unlist(BYUbreak[2])[2]+unlist(opphold[1])[2]+unlist(oppbreak[1])[2]
+    c<-unlist(BYUhold[2])[3]+unlist(BYUbreak[2])[3]+unlist(opphold[1])[3]+unlist(oppbreak[1])[3]
+    middle<-c(s,p,c)
+    
+    s<-unlist(BYUhold[3])[1]+unlist(BYUbreak[3])[1]+unlist(opphold[2])[1]+unlist(oppbreak[2])[1]
+    p<-unlist(BYUhold[3])[2]+unlist(BYUbreak[3])[2]+unlist(opphold[2])[2]+unlist(oppbreak[2])[2]
+    c<-unlist(BYUhold[3])[3]+unlist(BYUbreak[3])[3]+unlist(opphold[2])[3]+unlist(oppbreak[2])[3]
+    bottom<-c(s,p,c)
   
-  rawcombocolumn<-c(
-    sum(BYUholdcolumn,BYUbreakcolumn, oppholdcolumn, oppbreakcolumn))
+  rawcombocolumn<-list(top,middle,bottom)
   return(rawcombocolumn)
 }
 ```
+
+```{r}
+wcombo<-function(dataset,weights){
+  #read in the four pressure column situations
+  BYUhold<-BYUholdcolumn(dataset)
+  BYUbreak<-BYUbreakcolumn(dataset)
+  opphold<-oppholdcolumn(dataset)
+  oppbreak<-oppbreakcolumn(dataset)
+  
+  #initialize and then fill in rawcombocolumn
+  wcombocolumn<-NULL
+  
+    s<-weights[1]*unlist(BYUhold[1])[1]+weights[2]*unlist(BYUbreak[1])[1]
+    p<-weights[5]*unlist(BYUhold[1])[2]+weights[6]*unlist(BYUbreak[1])[2]
+    c<-weights[9]*unlist(BYUhold[1])[3]+weights[10]*unlist(BYUbreak[1])[3]
+    top<-c(s,p,c)
+    
+    s<-weights[1]*unlist(BYUhold[2])[1]+weights[2]*unlist(BYUbreak[2])[1]+weights[3]*unlist(opphold[1])[1]+weights[4]*unlist(oppbreak[1])[1]
+    p<-weights[5]*unlist(BYUhold[2])[2]+weights[6]*unlist(BYUbreak[2])[2]+weights[7]*unlist(opphold[1])[2]+weights[8]*unlist(oppbreak[1])[2]
+    c<-weights[9]*unlist(BYUhold[2])[3]+weights[10]*unlist(BYUbreak[2])[3]+weights[11]*unlist(opphold[1])[3]+weights[12]*unlist(oppbreak[1])[3]
+    middle<-c(s,p,c)
+    
+    s<-weights[1]*unlist(BYUhold[3])[1]+weights[2]*unlist(BYUbreak[3])[1]+weights[3]*unlist(opphold[2])[1]+weights[4]*unlist(oppbreak[2])[1]
+    p<-weights[5]*unlist(BYUhold[3])[2]+weights[6]*unlist(BYUbreak[3])[2]+weights[7]*unlist(opphold[2])[2]+weights[8]*unlist(oppbreak[2])[2]
+    c<-weights[9]*unlist(BYUhold[3])[3]+weights[10]*unlist(BYUbreak[3])[3]+weights[11]*unlist(opphold[2])[3]+weights[12]*unlist(oppbreak[2])[3]
+    bottom<-c(s,p,c)
+  
+  wcombocolumn<-list(top,middle,bottom)
+  return(wcombocolumn)
+}
+```
+
 
 Let's read in Ethan's data
 ```{r}
@@ -233,17 +270,48 @@ Generates what values will be scored and THEN put into the table. These are valu
 #concern: With the Ethan data serve returns into the net weren't logged as forced or unforced errors...
 #BUT, all the functions are verified to work fine otherwise as of Nov 12
 
+#weights for the wcombo
+w<-rep(1,times=12)
+
 (ethanNONclutchsit<-list(servingscore(ethanlp),playscore(ethanlp),clutchscore(ethanlp)))
 (ethanBYUhold<-BYUholdcolumn(ethanjoint))
 (ethanBYUbreak<-BYUbreakcolumn(ethanjoint))
 (ethanopphold<-oppholdcolumn(ethanjoint))
 (ethanoppbreak<-oppbreakcolumn(ethanjoint))
 (ethanrawcombo<-rawcombo(ethanjoint))
+(ethanwcombo<-wcombo(ethanjoint,w))
 ```
 
 
 Just a workspace chunk
 ```{r}
+  dataset<-ethanjoint
+
+  #read in the four pressure column situations
+  BYUhold<-BYUholdcolumn(dataset)
+  BYUbreak<-BYUbreakcolumn(dataset)
+  opphold<-oppholdcolumn(dataset)
+  oppbreak<-oppbreakcolumn(dataset)
+  
+  #initialize and then fill in wcombocolumn
+  wcombocolumn<-NULL
+  
+    s<-unlist(BYUhold[1])[1]+unlist(BYUbreak[1])[1]
+    p<-unlist(BYUhold[1])[2]+unlist(BYUbreak[1])[2]
+    c<-unlist(BYUhold[1])[3]+unlist(BYUbreak[1])[3]
+    top<-c(s,p,c)
+    
+    s<-unlist(BYUhold[2])[1]+unlist(BYUbreak[2])[1]+unlist(opphold[1])[1]+unlist(oppbreak[1])[1]
+    p<-unlist(BYUhold[2])[2]+unlist(BYUbreak[2])[2]+unlist(opphold[1])[2]+unlist(oppbreak[1])[2]
+    c<-unlist(BYUhold[2])[3]+unlist(BYUbreak[2])[3]+unlist(opphold[1])[3]+unlist(oppbreak[1])[3]
+    middle<-c(s,p,c)
+    
+    s<-unlist(BYUhold[3])[1]+unlist(BYUbreak[3])[1]+unlist(opphold[2])[1]+unlist(oppbreak[2])[1]
+    p<-unlist(BYUhold[3])[2]+unlist(BYUbreak[3])[2]+unlist(opphold[2])[2]+unlist(oppbreak[2])[2]
+    c<-unlist(BYUhold[3])[3]+unlist(BYUbreak[3])[3]+unlist(opphold[2])[3]+unlist(oppbreak[2])[3]
+    bottom<-c(s,p,c)
+  
+  wcombocolumn<-list(top,middle,bottom)
 
 ```
 
