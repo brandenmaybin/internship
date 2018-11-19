@@ -6,12 +6,18 @@ output: word_document
 ---
 
 ```{r}
-#########################TO DO LIST############################
-#Weights is the current issue. Whether clutch play and serves are equally valued as well as the actual values for clutch, null, and choke
+########################CURRENT WORK############################
+#We're changing the way we weight points themselves situationally, doing weighting as described in the scoring methodology page of the google slides presentation. 
 
-#How are we going to deal with deuce points being both hold and break? Right now I'm including them in both, but we could just add another category since it's such a higher stress situation than a normal break or hold opprotunity
+
+#########################TO DO LIST############################
+#Weights, Whether clutch play and serves are equally valued as well as the actual values for clutch, null, and choke. 
+
+#How are we going to deal with deuce points being both hold and break? Right now I'm including them in both, but we could just add another category since it's such a higher stress situation than a normal break or hold opprotunity :: RESOLVED WITH WEIGHTING
 
 #How are we going to deal with returns hit into the net? 
+
+#We need to take out possible tiebreaks since they mess with data
 ```
 
 ```{r}
@@ -20,6 +26,68 @@ library(alr3)
 library(MASS)
 library(dplyr)
 ```
+Situational Weights adds an additional column which gives a weight score for each point
+40-00 gets a .3 multiplier, 40-15 a .7, 40-30 a 1.0, Deuce a 2x
+4-4 and 5-5 get a x1.5 multiplier
+Set Points get x2
+Match Points get a x3 Multiplier
+
+Third Set gets a +1
+5-4, 4-5, 6-5 and 5-6 gets a +1
+
+
+```{r}
+SituationalWeights<-function(data){
+  N<-dim(data)[1]
+  Multiplier<-rep(0,times=N)
+  
+  #Game Points by score weight
+  for (i in 1:N){
+    if(data$player.points[i] == 0 & data$opp.points[i] == 3){Multiplier[i]<-.3}
+    if(data$opp.points[i] == 0 & data$player.points[i] == 3){Multiplier[i]<-.3}
+    if(data$player.points[i] == 1 & data$opp.points[i] == 3){Multiplier[i]<-.7}
+    if(data$opp.points[i] == 1 & data$player.points[i] == 3){Multiplier[i]<-.7}
+    if(data$player.points[i] == 2 & data$opp.points[i] == 3){Multiplier[i]<-1}
+    if(data$opp.points[i] == 2 & data$player.points[i] == 3){Multiplier[i]<-1}
+    if(data$player.points[i] == 3 & data$opp.points[i] == 3){Multiplier[i]<-2}
+  }
+  
+  #Game points under duress at 4-4 or 5-5 set score. High Pressure already keeps only game points
+  for (i in 1:N){
+    if(data$player.games[i] == 4 & data$opp.games[i] == 4){Multiplier[i]<-Multiplier[i]*1.5}
+    if(data$opp.games[i] == 5 & data$player.games[i] == 5){Multiplier[i]<-Multiplier[i]*1.5}
+  }
+
+  #Set Points 
+  for (i in 1:N){
+    if(data$player.games[i] == 5 & data$opp.games[i] == 6){Multiplier[i]<-Multiplier[i]*2+1}
+    if(data$player.games[i] == 4 & data$opp.games[i] == 5){Multiplier[i]<-Multiplier[i]*2+1}
+    if(data$player.games[i] == 3 & data$opp.games[i] == 5){Multiplier[i]<-Multiplier[i]*2+1}
+    if(data$player.games[i] == 2 & data$opp.games[i] == 5){Multiplier[i]<-Multiplier[i]*2}
+    if(data$player.games[i] == 1 & data$opp.games[i] == 5){Multiplier[i]<-Multiplier[i]*2}
+    if(data$player.games[i] == 0 & data$opp.games[i] == 5){Multiplier[i]<-Multiplier[i]*2}
+    if(data$player.games[i] == 6 & data$opp.games[i] == 5){Multiplier[i]<-Multiplier[i]*2+1}
+    if(data$player.games[i] == 5 & data$opp.games[i] == 4){Multiplier[i]<-Multiplier[i]*2+1}
+    if(data$player.games[i] == 5 & data$opp.games[i] == 3){Multiplier[i]<-Multiplier[i]*2+1}
+    if(data$player.games[i] == 5 & data$opp.games[i] == 2){Multiplier[i]<-Multiplier[i]*2}
+    if(data$player.games[i] == 5 & data$opp.games[i] == 1){Multiplier[i]<-Multiplier[i]*2}
+    if(data$player.games[i] == 5 & data$opp.games[i] == 0){Multiplier[i]<-Multiplier[i]*2}
+  }
+  
+  #Match Points
+  for(i in 1:N){
+    
+  }
+  
+  
+  return(Multiplier)
+}
+
+a<-SituationalWeights(ethanhp)
+sum(a)
+```
+
+
 
 pservingonly function filters out opponents, leaving just BYU serving
 ```{r}
@@ -249,9 +317,14 @@ wcombo<-function(dataset,weights=c(rep(1,times=12))){
 fullanalysismatrix calls all our previous functions and turns them into a matrix that looks like our table we have under clutch analysis
 ```{r}
 fullanalysismatrix<-function(dataset,weights=c(rep(1,times=12))){
-  MATRIX<-matrix(data=NULL,nrow=3,ncol = 7)
-  rownames(MATRIX)<-c("Clutch Serving Score","Clutch Playing Score", "OVERALL CLUTCH SCORE")
-  colnames(MATRIX)<-c("Low Pressure Situations","BYU Hold", "")
+  #Format the Matrix
+  MATRIX<-matrix(data=0,nrow=3,ncol = 7)
+  rownames(MATRIX)<-c("Clutch Serving Score","Clutch Playing Score", "Overall Clutch Score")
+  colnames(MATRIX)<-c("Low Pressure Situations","BYU Hold", "BYU Break", "Opp Hold", "Opp Break", "Raw Combo", "Weighted Combo")
+  
+  #Make the lp matrix
+  datasetlp<-lowpressure(dataset)
+  MATRIX[,1]<-list(servingscore(datasetlp),playscore(datasetlp),clutchscore(datasetlp))
   return(MATRIX)
 }
 ```
@@ -301,7 +374,6 @@ Generates what values will be scored and THEN put into the table. These are valu
 
 Just a workspace chunk
 ```{r}
-
 
 ```
 
