@@ -17,9 +17,9 @@ output: word_document
 
 #How are we going to deal with returns hit into the net? 
 
-#We need to take out possible tiebreaks since they mess with data
+#We need to take out possible tiebreaks since they mess with Data
 
-#We have the data properly corrected for the set set/game score corrections, but not for any possible match/set score issues 
+#We have the Data properly corrected for the set set/game score corrections, but not for any possible match/set score issues 
 
 #What the heck is the weighted combo column for?
 ```
@@ -36,19 +36,19 @@ library(dplyr)
 
 Set Score Corrector, for those situations where the set score doesn't get set back to 0-0 after a set is won
 ```{r}
-SetScoreCorrector<-function(data){
-  N<-dim(data)[1]
+SetScoreCorrector<-function(Data){
+  N<-dim(Data)[1]
   Errors<-rep(0,times=N)
   
   #Here's our work for a win on the players side not being counted correctly
     for (i in 1:N){
-        Errors[i]<- (data$player.games[i] >= 6 & data$opp.games[i] < 5)
+        Errors[i]<- (Data$PlayerGames[i] >= 6 & Data$OppGames[i] < 5)
     }
   
-    #here we correct the game/set scores. We make the assumption our data has the sets correct
-    data$player.games<-data$player.games-Errors*(6)
+    #here we correct the game/set scores. We make the assumption our Data has the sets correct
+    Data$PlayerGames<-Data$PlayerGames-Errors*(6)
   
-    return(data)
+    return(Data)
 }
 ```
 
@@ -65,79 +65,79 @@ Third Set Match Points get a x3 Multiplier
 
 
 ```{r}
-SituationalWeights<-function(data){
-  N<-dim(data)[1]
+SituationalWeights<-function(Data){
+  N<-dim(Data)[1]
   Multiplier<-rep(0,times=N)
   
   #Game Points by score weight
   for (i in 1:N){
-    if(data$player.points[i] == 0 & data$opp.points[i] == 3){Multiplier[i]<-.3}
-    if(data$opp.points[i] == 0 & data$player.points[i] == 3){Multiplier[i]<-.3}
-    if(data$player.points[i] == 1 & data$opp.points[i] == 3){Multiplier[i]<-.7}
-    if(data$opp.points[i] == 1 & data$player.points[i] == 3){Multiplier[i]<-.7}
-    if(data$player.points[i] == 2 & data$opp.points[i] == 3){Multiplier[i]<-1}
-    if(data$opp.points[i] == 2 & data$player.points[i] == 3){Multiplier[i]<-1}
-    if(data$player.points[i] == 3 & data$opp.points[i] == 3){Multiplier[i]<-2}
+    if(Data$PlayerPoints[i] == 0 & Data$OppPoints[i] == 3){Multiplier[i]<-.3}
+    if(Data$OppPoints[i] == 0 & Data$PlayerPoints[i] == 3){Multiplier[i]<-.3}
+    if(Data$PlayerPoints[i] == 1 & Data$OppPoints[i] == 3){Multiplier[i]<-.7}
+    if(Data$OppPoints[i] == 1 & Data$PlayerPoints[i] == 3){Multiplier[i]<-.7}
+    if(Data$PlayerPoints[i] == 2 & Data$OppPoints[i] == 3){Multiplier[i]<-1}
+    if(Data$OppPoints[i] == 2 & Data$PlayerPoints[i] == 3){Multiplier[i]<-1}
+    if(Data$PlayerPoints[i] == 3 & Data$OppPoints[i] == 3){Multiplier[i]<-2}
   }
   
   #Game points under duress at 4-4 or 5-5 set score. High Pressure already keeps only game points
   for (i in 1:N){
-    if(data$player.games[i] == 4 & data$opp.games[i] == 4){Multiplier[i]<-Multiplier[i]*1.5}
-    if(data$opp.games[i] == 5 & data$player.games[i] == 5){Multiplier[i]<-Multiplier[i]*1.5}
+    if(Data$PlayerGames[i] == 4 & Data$OppGames[i] == 4){Multiplier[i]<-Multiplier[i]*1.5}
+    if(Data$OppGames[i] == 5 & Data$PlayerGames[i] == 5){Multiplier[i]<-Multiplier[i]*1.5}
   }
 
   #Set Points, 1st set about to be won by either or second about to be won by the loser of the first set
   for (i in 1:N){
     #opp about to win the set
-    if(((data$player.sets[i] == 0 & data$opp.sets[i] == 0) | (data$player.sets[i] == 1 & data$opp.sets[i] == 0)) & data$player.games[i] == 5 & data$opp.games[i] == 6) {Multiplier[i]<-Multiplier[i]*2+1}
-    if(((data$player.sets[i] == 0 & data$opp.sets[i] == 0) | (data$player.sets[i] == 1 & data$opp.sets[i] == 0)) & data$player.games[i] == 4 & data$opp.games[i] == 5) {Multiplier[i]<-Multiplier[i]*2+1}
-    if(((data$player.sets[i] == 0 & data$opp.sets[i] == 0) | (data$player.sets[i] == 1 & data$opp.sets[i] == 0)) & data$player.games[i] == 3 & data$opp.games[i] == 5) {Multiplier[i]<-Multiplier[i]*2}
-    if(((data$player.sets[i] == 0 & data$opp.sets[i] == 0) | (data$player.sets[i] == 1 & data$opp.sets[i] == 0)) & data$player.games[i] == 2 & data$opp.games[i] == 5) {Multiplier[i]<-Multiplier[i]*2}
-    if(((data$player.sets[i] == 0 & data$opp.sets[i] == 0) | (data$player.sets[i] == 1 & data$opp.sets[i] == 0)) & data$player.games[i] == 1 & data$opp.games[i] == 5) {Multiplier[i]<-Multiplier[i]*2}
-    if(((data$player.sets[i] == 0 & data$opp.sets[i] == 0) | (data$player.sets[i] == 1 & data$opp.sets[i] == 0)) & data$player.games[i] == 0 & data$opp.games[i] == 5) {Multiplier[i]<-Multiplier[i]*2}
+    if(((Data$PlayerSets[i] == 0 & Data$OppSets[i] == 0) | (Data$PlayerSets[i] == 1 & Data$OppSets[i] == 0)) & Data$PlayerGames[i] == 5 & Data$OppGames[i] == 6) {Multiplier[i]<-Multiplier[i]*2+1}
+    if(((Data$PlayerSets[i] == 0 & Data$OppSets[i] == 0) | (Data$PlayerSets[i] == 1 & Data$OppSets[i] == 0)) & Data$PlayerGames[i] == 4 & Data$OppGames[i] == 5) {Multiplier[i]<-Multiplier[i]*2+1}
+    if(((Data$PlayerSets[i] == 0 & Data$OppSets[i] == 0) | (Data$PlayerSets[i] == 1 & Data$OppSets[i] == 0)) & Data$PlayerGames[i] == 3 & Data$OppGames[i] == 5) {Multiplier[i]<-Multiplier[i]*2}
+    if(((Data$PlayerSets[i] == 0 & Data$OppSets[i] == 0) | (Data$PlayerSets[i] == 1 & Data$OppSets[i] == 0)) & Data$PlayerGames[i] == 2 & Data$OppGames[i] == 5) {Multiplier[i]<-Multiplier[i]*2}
+    if(((Data$PlayerSets[i] == 0 & Data$OppSets[i] == 0) | (Data$PlayerSets[i] == 1 & Data$OppSets[i] == 0)) & Data$PlayerGames[i] == 1 & Data$OppGames[i] == 5) {Multiplier[i]<-Multiplier[i]*2}
+    if(((Data$PlayerSets[i] == 0 & Data$OppSets[i] == 0) | (Data$PlayerSets[i] == 1 & Data$OppSets[i] == 0)) & Data$PlayerGames[i] == 0 & Data$OppGames[i] == 5) {Multiplier[i]<-Multiplier[i]*2}
     #player about to win the set
-    if(((data$player.sets[i] == 0 & data$opp.sets[i] == 0) | (data$player.sets[i] == 0 & data$opp.sets[i] == 1)) & data$player.games[i] == 6 & data$opp.games[i] == 5) {Multiplier[i]<-Multiplier[i]*2+1}
-    if(((data$player.sets[i] == 0 & data$opp.sets[i] == 0) | (data$player.sets[i] == 0 & data$opp.sets[i] == 1)) & data$player.games[i] == 5 & data$opp.games[i] == 4) {Multiplier[i]<-Multiplier[i]*2+1}
-    if(((data$player.sets[i] == 0 & data$opp.sets[i] == 0) | (data$player.sets[i] == 0 & data$opp.sets[i] == 1)) & data$player.games[i] == 5 & data$opp.games[i] == 3) {Multiplier[i]<-Multiplier[i]*2}
-    if(((data$player.sets[i] == 0 & data$opp.sets[i] == 0) | (data$player.sets[i] == 0 & data$opp.sets[i] == 1)) & data$player.games[i] == 5 & data$opp.games[i] == 2) {Multiplier[i]<-Multiplier[i]*2}
-    if(((data$player.sets[i] == 0 & data$opp.sets[i] == 0) | (data$player.sets[i] == 0 & data$opp.sets[i] == 1)) & data$player.games[i] == 5 & data$opp.games[i] == 1) {Multiplier[i]<-Multiplier[i]*2}
-    if(((data$player.sets[i] == 0 & data$opp.sets[i] == 0) | (data$player.sets[i] == 0 & data$opp.sets[i] == 1)) & data$player.games[i] == 5 & data$opp.games[i] == 0) {Multiplier[i]<-Multiplier[i]*2}
+    if(((Data$PlayerSets[i] == 0 & Data$OppSets[i] == 0) | (Data$PlayerSets[i] == 0 & Data$OppSets[i] == 1)) & Data$PlayerGames[i] == 6 & Data$OppGames[i] == 5) {Multiplier[i]<-Multiplier[i]*2+1}
+    if(((Data$PlayerSets[i] == 0 & Data$OppSets[i] == 0) | (Data$PlayerSets[i] == 0 & Data$OppSets[i] == 1)) & Data$PlayerGames[i] == 5 & Data$OppGames[i] == 4) {Multiplier[i]<-Multiplier[i]*2+1}
+    if(((Data$PlayerSets[i] == 0 & Data$OppSets[i] == 0) | (Data$PlayerSets[i] == 0 & Data$OppSets[i] == 1)) & Data$PlayerGames[i] == 5 & Data$OppGames[i] == 3) {Multiplier[i]<-Multiplier[i]*2}
+    if(((Data$PlayerSets[i] == 0 & Data$OppSets[i] == 0) | (Data$PlayerSets[i] == 0 & Data$OppSets[i] == 1)) & Data$PlayerGames[i] == 5 & Data$OppGames[i] == 2) {Multiplier[i]<-Multiplier[i]*2}
+    if(((Data$PlayerSets[i] == 0 & Data$OppSets[i] == 0) | (Data$PlayerSets[i] == 0 & Data$OppSets[i] == 1)) & Data$PlayerGames[i] == 5 & Data$OppGames[i] == 1) {Multiplier[i]<-Multiplier[i]*2}
+    if(((Data$PlayerSets[i] == 0 & Data$OppSets[i] == 0) | (Data$PlayerSets[i] == 0 & Data$OppSets[i] == 1)) & Data$PlayerGames[i] == 5 & Data$OppGames[i] == 0) {Multiplier[i]<-Multiplier[i]*2}
   }
   
   #Match Points in the second set
   for(i in 1:N){
     #player about to win
-    if(data$player.sets[i] == 1 & data$opp.sets[i] == 0 & data$player.games[i] == 6 & data$opp.games[i] == 5) {Multiplier[i]<-Multiplier[i]*3+1}
-    if(data$player.sets[i] == 1 & data$opp.sets[i] == 0 & data$player.games[i] == 5 & data$opp.games[i] == 4) {Multiplier[i]<-Multiplier[i]*3+1}
-    if(data$player.sets[i] == 1 & data$opp.sets[i] == 0 & data$player.games[i] == 5 & data$opp.games[i] == 3) {Multiplier[i]<-Multiplier[i]*3}
-    if(data$player.sets[i] == 1 & data$opp.sets[i] == 0 & data$player.games[i] == 5 & data$opp.games[i] == 2) {Multiplier[i]<-Multiplier[i]*3}
-    if(data$player.sets[i] == 1 & data$opp.sets[i] == 0 & data$player.games[i] == 5 & data$opp.games[i] == 1) {Multiplier[i]<-Multiplier[i]*3}
-    if(data$player.sets[i] == 1 & data$opp.sets[i] == 0 & data$player.games[i] == 5 & data$opp.games[i] == 0) {Multiplier[i]<-Multiplier[i]*3}
+    if(Data$PlayerSets[i] == 1 & Data$OppSets[i] == 0 & Data$PlayerGames[i] == 6 & Data$OppGames[i] == 5) {Multiplier[i]<-Multiplier[i]*3+1}
+    if(Data$PlayerSets[i] == 1 & Data$OppSets[i] == 0 & Data$PlayerGames[i] == 5 & Data$OppGames[i] == 4) {Multiplier[i]<-Multiplier[i]*3+1}
+    if(Data$PlayerSets[i] == 1 & Data$OppSets[i] == 0 & Data$PlayerGames[i] == 5 & Data$OppGames[i] == 3) {Multiplier[i]<-Multiplier[i]*3}
+    if(Data$PlayerSets[i] == 1 & Data$OppSets[i] == 0 & Data$PlayerGames[i] == 5 & Data$OppGames[i] == 2) {Multiplier[i]<-Multiplier[i]*3}
+    if(Data$PlayerSets[i] == 1 & Data$OppSets[i] == 0 & Data$PlayerGames[i] == 5 & Data$OppGames[i] == 1) {Multiplier[i]<-Multiplier[i]*3}
+    if(Data$PlayerSets[i] == 1 & Data$OppSets[i] == 0 & Data$PlayerGames[i] == 5 & Data$OppGames[i] == 0) {Multiplier[i]<-Multiplier[i]*3}
     #opponent about to win
-    if(data$player.sets[i] == 0 & data$opp.sets[i] == 1 & data$player.games[i] == 5 & data$opp.games[i] == 6) {Multiplier[i]<-Multiplier[i]*3+1}
-    if(data$player.sets[i] == 0 & data$opp.sets[i] == 1 & data$player.games[i] == 4 & data$opp.games[i] == 5) {Multiplier[i]<-Multiplier[i]*3+1}
-    if(data$player.sets[i] == 0 & data$opp.sets[i] == 1 & data$player.games[i] == 3 & data$opp.games[i] == 5) {Multiplier[i]<-Multiplier[i]*3}
-    if(data$player.sets[i] == 0 & data$opp.sets[i] == 1 & data$player.games[i] == 2 & data$opp.games[i] == 5) {Multiplier[i]<-Multiplier[i]*3}
-    if(data$player.sets[i] == 0 & data$opp.sets[i] == 1 & data$player.games[i] == 1 & data$opp.games[i] == 5) {Multiplier[i]<-Multiplier[i]*3}
-    if(data$player.sets[i] == 0 & data$opp.sets[i] == 1 & data$player.games[i] == 0 & data$opp.games[i] == 5) {Multiplier[i]<-Multiplier[i]*3}
+    if(Data$PlayerSets[i] == 0 & Data$OppSets[i] == 1 & Data$PlayerGames[i] == 5 & Data$OppGames[i] == 6) {Multiplier[i]<-Multiplier[i]*3+1}
+    if(Data$PlayerSets[i] == 0 & Data$OppSets[i] == 1 & Data$PlayerGames[i] == 4 & Data$OppGames[i] == 5) {Multiplier[i]<-Multiplier[i]*3+1}
+    if(Data$PlayerSets[i] == 0 & Data$OppSets[i] == 1 & Data$PlayerGames[i] == 3 & Data$OppGames[i] == 5) {Multiplier[i]<-Multiplier[i]*3}
+    if(Data$PlayerSets[i] == 0 & Data$OppSets[i] == 1 & Data$PlayerGames[i] == 2 & Data$OppGames[i] == 5) {Multiplier[i]<-Multiplier[i]*3}
+    if(Data$PlayerSets[i] == 0 & Data$OppSets[i] == 1 & Data$PlayerGames[i] == 1 & Data$OppGames[i] == 5) {Multiplier[i]<-Multiplier[i]*3}
+    if(Data$PlayerSets[i] == 0 & Data$OppSets[i] == 1 & Data$PlayerGames[i] == 0 & Data$OppGames[i] == 5) {Multiplier[i]<-Multiplier[i]*3}
   }
   
   #Match Points in the Third set
   for(i in 1:N){
     #player about to win
-    if(data$player.sets[i] == 1 & data$opp.sets[i] == 1 & data$player.games[i] == 6 & data$opp.games[i] == 5) {Multiplier[i]<-Multiplier[i]*5+1}
-    if(data$player.sets[i] == 1 & data$opp.sets[i] == 1 & data$player.games[i] == 5 & data$opp.games[i] == 4) {Multiplier[i]<-Multiplier[i]*5+1}
-    if(data$player.sets[i] == 1 & data$opp.sets[i] == 1 & data$player.games[i] == 5 & data$opp.games[i] == 3) {Multiplier[i]<-Multiplier[i]*5}
-    if(data$player.sets[i] == 1 & data$opp.sets[i] == 1 & data$player.games[i] == 5 & data$opp.games[i] == 2) {Multiplier[i]<-Multiplier[i]*5}
-    if(data$player.sets[i] == 1 & data$opp.sets[i] == 1 & data$player.games[i] == 5 & data$opp.games[i] == 1) {Multiplier[i]<-Multiplier[i]*5}
-    if(data$player.sets[i] == 1 & data$opp.sets[i] == 1 & data$player.games[i] == 5 & data$opp.games[i] == 0) {Multiplier[i]<-Multiplier[i]*5}
+    if(Data$PlayerSets[i] == 1 & Data$OppSets[i] == 1 & Data$PlayerGames[i] == 6 & Data$OppGames[i] == 5) {Multiplier[i]<-Multiplier[i]*5+1}
+    if(Data$PlayerSets[i] == 1 & Data$OppSets[i] == 1 & Data$PlayerGames[i] == 5 & Data$OppGames[i] == 4) {Multiplier[i]<-Multiplier[i]*5+1}
+    if(Data$PlayerSets[i] == 1 & Data$OppSets[i] == 1 & Data$PlayerGames[i] == 5 & Data$OppGames[i] == 3) {Multiplier[i]<-Multiplier[i]*5}
+    if(Data$PlayerSets[i] == 1 & Data$OppSets[i] == 1 & Data$PlayerGames[i] == 5 & Data$OppGames[i] == 2) {Multiplier[i]<-Multiplier[i]*5}
+    if(Data$PlayerSets[i] == 1 & Data$OppSets[i] == 1 & Data$PlayerGames[i] == 5 & Data$OppGames[i] == 1) {Multiplier[i]<-Multiplier[i]*5}
+    if(Data$PlayerSets[i] == 1 & Data$OppSets[i] == 1 & Data$PlayerGames[i] == 5 & Data$OppGames[i] == 0) {Multiplier[i]<-Multiplier[i]*5}
     #opponent about to win
-    if(data$player.sets[i] == 1 & data$opp.sets[i] == 1 & data$player.games[i] == 5 & data$opp.games[i] == 6) {Multiplier[i]<-Multiplier[i]*5+1}
-    if(data$player.sets[i] == 1 & data$opp.sets[i] == 1 & data$player.games[i] == 4 & data$opp.games[i] == 5) {Multiplier[i]<-Multiplier[i]*5+1}
-    if(data$player.sets[i] == 1 & data$opp.sets[i] == 1 & data$player.games[i] == 3 & data$opp.games[i] == 5) {Multiplier[i]<-Multiplier[i]*5}
-    if(data$player.sets[i] == 1 & data$opp.sets[i] == 1 & data$player.games[i] == 2 & data$opp.games[i] == 5) {Multiplier[i]<-Multiplier[i]*5}
-    if(data$player.sets[i] == 1 & data$opp.sets[i] == 1 & data$player.games[i] == 1 & data$opp.games[i] == 5) {Multiplier[i]<-Multiplier[i]*5}
-    if(data$player.sets[i] == 1 & data$opp.sets[i] == 1 & data$player.games[i] == 0 & data$opp.games[i] == 5) {Multiplier[i]<-Multiplier[i]*5}
+    if(Data$PlayerSets[i] == 1 & Data$OppSets[i] == 1 & Data$PlayerGames[i] == 5 & Data$OppGames[i] == 6) {Multiplier[i]<-Multiplier[i]*5+1}
+    if(Data$PlayerSets[i] == 1 & Data$OppSets[i] == 1 & Data$PlayerGames[i] == 4 & Data$OppGames[i] == 5) {Multiplier[i]<-Multiplier[i]*5+1}
+    if(Data$PlayerSets[i] == 1 & Data$OppSets[i] == 1 & Data$PlayerGames[i] == 3 & Data$OppGames[i] == 5) {Multiplier[i]<-Multiplier[i]*5}
+    if(Data$PlayerSets[i] == 1 & Data$OppSets[i] == 1 & Data$PlayerGames[i] == 2 & Data$OppGames[i] == 5) {Multiplier[i]<-Multiplier[i]*5}
+    if(Data$PlayerSets[i] == 1 & Data$OppSets[i] == 1 & Data$PlayerGames[i] == 1 & Data$OppGames[i] == 5) {Multiplier[i]<-Multiplier[i]*5}
+    if(Data$PlayerSets[i] == 1 & Data$OppSets[i] == 1 & Data$PlayerGames[i] == 0 & Data$OppGames[i] == 5) {Multiplier[i]<-Multiplier[i]*5}
   }
   
   return(Multiplier)
@@ -149,77 +149,77 @@ SituationalWeights<-function(data){
 
 pservingonly function filters out opponents, leaving just BYU serving
 ```{r}
-pservingonly<-function(rawdata){
-  joint<-filter(rawdata,rawdata$server=="P")
+pservingonly<-function(RawData){
+  joint<-filter(RawData,RawData$Server=="P")
 }
 ```
 
-highpressure function keeps only possible clutch points (a break or hold point)
+HighPressure function keeps only possible clutch points (a break or hold point)
 ```{r}
-highpressure<-function(rawdata){
-  #just clutch points, no sorting for server
-hp<-rbind(
-    rawdata[(rawdata$player.points == 0 & rawdata$opp.points == 3),],
-    rawdata[(rawdata$player.points == 1 & rawdata$opp.points == 3),],
-    rawdata[(rawdata$player.points == 2 & rawdata$opp.points == 3),],
-    rawdata[(rawdata$player.points == 3 & rawdata$opp.points == 3),],
-    rawdata[(rawdata$player.points == 3 & rawdata$opp.points == 2),],
-    rawdata[(rawdata$player.points == 3 & rawdata$opp.points == 1),],
-    rawdata[(rawdata$player.points == 3 & rawdata$opp.points == 0),])
-  return(hp)
+HighPressure<-function(RawData){
+  #just clutch points, no sorting for Server
+HP<-rbind(
+    RawData[(RawData$PlayerPoints == 0 & RawData$OppPoints == 3),],
+    RawData[(RawData$PlayerPoints == 1 & RawData$OppPoints == 3),],
+    RawData[(RawData$PlayerPoints == 2 & RawData$OppPoints == 3),],
+    RawData[(RawData$PlayerPoints == 3 & RawData$OppPoints == 3),],
+    RawData[(RawData$PlayerPoints == 3 & RawData$OppPoints == 2),],
+    RawData[(RawData$PlayerPoints == 3 & RawData$OppPoints == 1),],
+    RawData[(RawData$PlayerPoints == 3 & RawData$OppPoints == 0),])
+  return(HP)
 }
 ```
 
-lowpressure function keeps everything but clutch points
+LowPressure function keeps everything but clutch points
 ```{r}
-lowpressure<-function(rawdata){
-  #just clutch points, no sorting for server
-lp<-rawdata[(rawdata$player.points != 3 & rawdata$opp.points != 3),]
-  return(lp)
+LowPressure<-function(RawData){
+  #just clutch points, no sorting for Server
+LP<-RawData[(RawData$PlayerPoints != 3 & RawData$OppPoints != 3),]
+  return(LP)
 }
 ```
 
-acefilter: Returns all aces in a given dataset
+acefilter: Returns all aces in a given Dataset
 ```{r}
-acefilter<-function(dataset){
-  filter(dataset,dataset$serve.result=="A")
+acefilter<-function(Dataset){
+  filter(Dataset,Dataset$ServeResult=="A")
 }
 ```
 
-dffilter: Returns all double faults in a given dataset
+dffilter: Returns all double faults in a given Dataset
 ```{r}
-dffilter<-function(dataset){
-  filter(dataset,dataset$serve.result=="D")
+dffilter<-function(Dataset){
+  filter(Dataset,Dataset$ServeResult=="D")
 }
 ```
 
 sclutchwins: Returns all short points won by BYU winners or opponent forced errors
 ```{r}
-sclutchwins<-function(dataset){
-  filter(dataset,dataset$point.length=="S" & dataset$point.winner=="P" & dataset$result %in% c("W","F"))
+sclutchwins<-function(Dataset){
+  filter(Dataset,Dataset$PointLength=="S" & Dataset$PointWinner=="P" & Dataset$Result %in% c("W","F"))
 }
 ```
 
 schokelosses: Returns all short points lost by opponent winners or BYU Forced errors 
 Low Pressure Calculating function
 ```{r}
-schokelosses<-function(dataset){
-  filter(dataset,dataset$point.length=="S" & dataset$point.winner=="O" & dataset$result %in% c("W","F"))
+schokelosses<-function(Dataset){
+  filter(Dataset,Dataset$PointLength=="S" & Dataset$PointWinner=="O" & Dataset$Result %in% c("W","F"))
 }
 ```
 
 Serving Scoring function
 ```{r}
-servingscore<-function(dataset, W=c(1,-1,0)){
-  clutch<-rbind(filter(dataset,dataset$point.winner=="P" & dataset$point.length=="S" & dataset$result %in% c("W","F") & dataset$server=="P"), filter(dataset, dataset$result=="A" & dataset$server=="P"))
-  choke<-rbind(filter(dataset,dataset$point.winner=="O" & dataset$point.length=="S" & dataset$result %in% c("W","F") & dataset$server=="P"), filter(dataset, dataset$result=="D" & dataset$server=="P"))
-  null<-rbind(filter(dataset, dataset$serve.result %in% c("F","S") & dataset$point.length %in% c("M","L") & dataset$server=="P"))
-  #we add an if here to catch when we run the lpcolum through serving, sicne the situational weights of low pressure situations are 0. Here, if we find all the values are 0 we just use the dimensions in the calculation
-  if(sum(clutch$situational.weight)+sum(choke$situational.weight)+sum(null$situational.weight) == 0){
+servingscore<-function(Dataset, W=c(1,-1,0)){
+  clutch<-rbind(filter(Dataset,Dataset$PointWinner=="P" & Dataset$PointLength=="S" & Dataset$Result %in% c("W","F") & Dataset$Server=="P"), filter(Dataset, Dataset$Result=="A" & Dataset$Server=="P"))
+  choke<-rbind(filter(Dataset,Dataset$PointWinner=="O" & Dataset$PointLength=="S" & Dataset$Result %in% c("W","F") & Dataset$Server=="P"), filter(Dataset, Dataset$Result=="D" & Dataset$Server=="P"))
+  null<-rbind(filter(Dataset, Dataset$ServeResult %in% c("F","S") & Dataset$PointLength %in% c("M","L") & Dataset$Server=="P"))
+  #we add an if here to catch when we run the LPcolum through serving, sicne the situational weights of low pressure situations are 0. Here, if we find all the values are 0 we just use the dimensions in the calculation
+  if(sum(clutch$SituationalWeight)+sum(choke$SituationalWeight)+sum(null$SituationalWeight) == 0){
     score<-dim(clutch)[1]*W[1]+dim(choke)[1]*W[2]+dim(null)[1]*W[3]
   }
   else{
-    score<-c(sum(clutch$situational.weight)*W[1]+sum(choke$situational.weight)*W[2]+sum(null$situational.weight)*W[3])
+    score<-c(sum(clutch$SituationalWeight)*W[1]+sum(choke$SituationalWeight)*W[2]+sum(null$SituationalWeight)*W[3])
   }
   
   return(score)
@@ -228,20 +228,20 @@ servingscore<-function(dataset, W=c(1,-1,0)){
 
 Play Scoring function
 ```{r}
-playscore<-function(dataset, W=c(1,-1,0)){
-  clutch<-filter(dataset,dataset$point.winner=="P" & dataset$result %in% c("W","F"))
-  choke<-filter(dataset,dataset$point.winner=="O" & dataset$result == "U")
-  null<-rbind(filter(dataset,dataset$point.winner=="P" & dataset$result == "U"), filter(dataset,dataset$point.winner=="O" & dataset$result %in% c("W","F")))
+playscore<-function(Dataset, W=c(1,-1,0)){
+  clutch<-filter(Dataset,Dataset$PointWinner=="P" & Dataset$Result %in% c("W","F"))
+  choke<-filter(Dataset,Dataset$PointWinner=="O" & Dataset$Result == "U")
+  null<-rbind(filter(Dataset,Dataset$PointWinner=="P" & Dataset$Result == "U"), filter(Dataset,Dataset$PointWinner=="O" & Dataset$Result %in% c("W","F")))
   #we can add in modifiers if we so desire here
-  score<-c(sum(clutch$situational.weight)*W[1]+sum(choke$situational.weight)*W[2]+sum(null$situational.weight)*W[3])
+  score<-c(sum(clutch$SituationalWeight)*W[1]+sum(choke$SituationalWeight)*W[2]+sum(null$SituationalWeight)*W[3])
   return(score)
 }
 ```
 
 Serving + Play Clutch Score
 ```{r}
-clutchscore<-function(dataset){
-  score<-playscore(dataset)+servingscore(dataset)
+clutchscore<-function(Dataset){
+  score<-playscore(Dataset)+servingscore(Dataset)
   return(score)
 }
 ```
@@ -249,26 +249,26 @@ clutchscore<-function(dataset){
 
 Low Pressure Column (No game points of any kind)
 ```{r}
-lpcolumn<-function(dataset){
-  lpdata<-lowpressure(dataset)
-  lpservingscore<-servingscore(lpdata)
-  lpplayscore<-playscore(lpdata)
-  lpclutchscore<-clutchscore(lpdata)
-  lpcolumn<-c(lpservingscore,lpplayscore,lpclutchscore)
-  return(lpcolumn)
+LPcolumn<-function(Dataset){
+  LPData<-LowPressure(Dataset)
+  LPservingscore<-servingscore(LPData)
+  LPplayscore<-playscore(LPData)
+  LPclutchscore<-clutchscore(LPData)
+  LPcolumn<-c(LPservingscore,LPplayscore,LPclutchscore)
+  return(LPcolumn)
 }
 ```
 
 
 BYU Hold Point Calculating function
 ```{r}
-BYUholdcolumn<-function(dataset){
-  #build the BYU holding data frame including the deuce points
+BYUholdcolumn<-function(Dataset){
+  #build the BYU holding Data frame including the deuce points
   byuholddf<-rbind(
-    dataset[(dataset$player.points == 3 & dataset$opp.points == 3) & dataset$server== "P",],
-    dataset[(dataset$player.points == 3 & dataset$opp.points == 2) & dataset$server== "P",],
-    dataset[(dataset$player.points == 3 & dataset$opp.points == 1) & dataset$server== "P",],
-    dataset[(dataset$player.points == 3 & dataset$opp.points == 0) & dataset$server== "P",])
+    Dataset[(Dataset$PlayerPoints == 3 & Dataset$OppPoints == 3) & Dataset$Server== "P",],
+    Dataset[(Dataset$PlayerPoints == 3 & Dataset$OppPoints == 2) & Dataset$Server== "P",],
+    Dataset[(Dataset$PlayerPoints == 3 & Dataset$OppPoints == 1) & Dataset$Server== "P",],
+    Dataset[(Dataset$PlayerPoints == 3 & Dataset$OppPoints == 0) & Dataset$Server== "P",])
   byuholdservingscore<-servingscore(byuholddf)
   byuholdplayscore<-playscore(byuholddf)
   byuholdclutchscore<-clutchscore(byuholddf)
@@ -279,13 +279,13 @@ BYUholdcolumn<-function(dataset){
 
 BYU being broken Point Calculating function
 ```{r}
-BYUbreakcolumn<-function(dataset){
-  #build the BYU to be broken data frame including the deuce points
+BYUbreakcolumn<-function(Dataset){
+  #build the BYU to be broken Data frame including the deuce points
   byubreakdf<-rbind(
-    dataset[(dataset$player.points == 3 & dataset$opp.points == 3) & dataset$server== "P",],
-    dataset[(dataset$player.points == 2 & dataset$opp.points == 3) & dataset$server== "P",],
-    dataset[(dataset$player.points == 1 & dataset$opp.points == 3) & dataset$server== "P",],
-    dataset[(dataset$player.points == 0 & dataset$opp.points == 3) & dataset$server== "P",])
+    Dataset[(Dataset$PlayerPoints == 3 & Dataset$OppPoints == 3) & Dataset$Server== "P",],
+    Dataset[(Dataset$PlayerPoints == 2 & Dataset$OppPoints == 3) & Dataset$Server== "P",],
+    Dataset[(Dataset$PlayerPoints == 1 & Dataset$OppPoints == 3) & Dataset$Server== "P",],
+    Dataset[(Dataset$PlayerPoints == 0 & Dataset$OppPoints == 3) & Dataset$Server== "P",])
   byubreakservingscore<-servingscore(byubreakdf)
   byubreakplayscore<-playscore(byubreakdf)
   byubreakclutchscore<-clutchscore(byubreakdf)
@@ -296,13 +296,13 @@ BYUbreakcolumn<-function(dataset){
 
 Opp Hold Point Calculating function
 ```{r}
-oppholdcolumn<-function(dataset){
-  #build the opp holding data frame including the deuce points
+oppholdcolumn<-function(Dataset){
+  #build the opp holding Data frame including the deuce points
   oppholddf<-rbind(
-    dataset[(dataset$player.points == 3 & dataset$opp.points == 3) & dataset$server== "O",],
-    dataset[(dataset$player.points == 2 & dataset$opp.points == 3) & dataset$server== "O",],
-    dataset[(dataset$player.points == 1 & dataset$opp.points == 3) & dataset$server== "O",],
-    dataset[(dataset$player.points == 0 & dataset$opp.points == 3) & dataset$server== "O",])
+    Dataset[(Dataset$PlayerPoints == 3 & Dataset$OppPoints == 3) & Dataset$Server== "O",],
+    Dataset[(Dataset$PlayerPoints == 2 & Dataset$OppPoints == 3) & Dataset$Server== "O",],
+    Dataset[(Dataset$PlayerPoints == 1 & Dataset$OppPoints == 3) & Dataset$Server== "O",],
+    Dataset[(Dataset$PlayerPoints == 0 & Dataset$OppPoints == 3) & Dataset$Server== "O",])
   oppholdplayscore<-playscore(oppholddf)
   oppholdclutchscore<-clutchscore(oppholddf)
   oppholdscores<-c(oppholdplayscore,oppholdclutchscore)
@@ -312,13 +312,13 @@ oppholdcolumn<-function(dataset){
 
 Opp being broken Point Calculating function
 ```{r}
-oppbreakcolumn<-function(dataset){
-  #build the opp breaking data frame including the deuce points
+oppbreakcolumn<-function(Dataset){
+  #build the opp breaking Data frame including the deuce points
   oppbreakdf<-rbind(
-    dataset[(dataset$player.points == 3 & dataset$opp.points == 3) & dataset$server== "O",],
-    dataset[(dataset$player.points == 3 & dataset$opp.points == 2) & dataset$server== "O",],
-    dataset[(dataset$player.points == 3 & dataset$opp.points == 1) & dataset$server== "O",],
-    dataset[(dataset$player.points == 3 & dataset$opp.points == 0) & dataset$server== "O",])
+    Dataset[(Dataset$PlayerPoints == 3 & Dataset$OppPoints == 3) & Dataset$Server== "O",],
+    Dataset[(Dataset$PlayerPoints == 3 & Dataset$OppPoints == 2) & Dataset$Server== "O",],
+    Dataset[(Dataset$PlayerPoints == 3 & Dataset$OppPoints == 1) & Dataset$Server== "O",],
+    Dataset[(Dataset$PlayerPoints == 3 & Dataset$OppPoints == 0) & Dataset$Server== "O",])
   oppbreakplayscore<-playscore(oppbreakdf)
   oppbreakclutchscore<-clutchscore(oppbreakdf)
   oppbreakscores<-c(oppbreakplayscore,oppbreakclutchscore)
@@ -326,37 +326,37 @@ oppbreakcolumn<-function(dataset){
 }
 ```
 
-Raw Combo makes the raw combo column in the clutch table. It should return a vector of 3, each with 3 elements
+Raw Combo makes the Raw combo column in the clutch table. It should return a vector of 3, each with 3 elements
 ```{r}
-rawcombo<-function(dataset){
+Rawcombo<-function(Dataset){
   #read in the four pressure column situations
-  BYUhold<-BYUholdcolumn(dataset)
-  BYUbreak<-BYUbreakcolumn(dataset)
-  opphold<-oppholdcolumn(dataset)
-  oppbreak<-oppbreakcolumn(dataset)
+  BYUhold<-BYUholdcolumn(Dataset)
+  BYUbreak<-BYUbreakcolumn(Dataset)
+  opphold<-oppholdcolumn(Dataset)
+  oppbreak<-oppbreakcolumn(Dataset)
   
-  #initialize and then fill in rawcombocolumn
-  rawcombocolumn<-NULL
+  #initialize and then fill in Rawcombocolumn
+  Rawcombocolumn<-NULL
 
     top<-BYUhold[1]+BYUbreak[1]
     middle<-BYUhold[2]+BYUbreak[2]+opphold[1]+oppbreak[1]
     bottom<-BYUhold[3]+BYUbreak[3]+opphold[2]+oppbreak[2]
   
-  rawcombocolumn<-c(top,middle,bottom)
-  return(rawcombocolumn)
+  Rawcombocolumn<-c(top,middle,bottom)
+  return(Rawcombocolumn)
 }
 ```
 
-The Weighted combo function takes a dataset and a weight vector of length 12 it can apply to each combination of OPP/BYU/HOLD/BREAK being clutch, choke or neutral. It doesn't account for specific high-stress points, like a match points vs. a hold point in the first set. 
+The Weighted combo function takes a Dataset and a weight vector of length 12 it can apply to each combination of OPP/BYU/HOLD/BREAK being clutch, choke or neutral. It doesn't account for specific high-stress points, like a match points vs. a hold point in the first set. 
 ```{r}
-wcombo<-function(dataset,weights=c(rep(1,times=12))){
+wcombo<-function(Dataset,weights=c(rep(1,times=12))){
   #read in the four pressure column situations
-  BYUhold<-BYUholdcolumn(dataset)
-  BYUbreak<-BYUbreakcolumn(dataset)
-  opphold<-oppholdcolumn(dataset)
-  oppbreak<-oppbreakcolumn(dataset)
+  BYUhold<-BYUholdcolumn(Dataset)
+  BYUbreak<-BYUbreakcolumn(Dataset)
+  opphold<-oppholdcolumn(Dataset)
+  oppbreak<-oppbreakcolumn(Dataset)
   
-  #initialize and then fill in rawcombocolumn
+  #initialize and then fill in Rawcombocolumn
   wcombocolumn<-NULL
   
     s<-weights[1]*unlist(BYUhold[1])[1]+weights[2]*unlist(BYUbreak[1])[1]
@@ -382,23 +382,23 @@ wcombo<-function(dataset,weights=c(rep(1,times=12))){
 
 fullanalysismatrix calls all our previous functions and turns them into a matrix that looks like our table we have under clutch analysis
 ```{r}
-FullMatrix<-function(dataset){
+FullMatrix<-function(Dataset){
   #Format the Matrix
   MATRIX<-matrix(data=0,nrow=3,ncol = 7)
   rownames(MATRIX)<-c("Clutch Serving Score","Clutch Playing Score", "Overall Clutch Score")
   colnames(MATRIX)<-c("Low Pressure","BYU Hold", "BYU Break", "Opp Hold", "Opp Break", "Raw Combo", "Weighted Combo")
   
-  #Make the lp matrix and do the non-clutch column
-  lpdataset<-lowpressure(dataset)
-  MATRIX[,1]<-c(servingscore(lpdataset),playscore(lpdataset),clutchscore(lpdataset))
+  #Make the LP matrix and do the non-clutch column
+  LPDataset<-LowPressure(Dataset)
+  MATRIX[,1]<-c(servingscore(LPDataset),playscore(LPDataset),clutchscore(LPDataset))
   
   #Then the next 4 columns
-  hpdataset<-highpressure(dataset)
-  MATRIX[,2]<-BYUholdcolumn(hpdataset)
-  MATRIX[,3]<-BYUbreakcolumn(hpdataset)
-  MATRIX[2:3,4]<-oppholdcolumn(hpdataset)
-  MATRIX[2:3,5]<-oppbreakcolumn(hpdataset)
-  MATRIX[,6]<-rawcombo(hpdataset)
+  HPDataset<-HighPressure(Dataset)
+  MATRIX[,2]<-BYUholdcolumn(HPDataset)
+  MATRIX[,3]<-BYUbreakcolumn(HPDataset)
+  MATRIX[2:3,4]<-oppholdcolumn(HPDataset)
+  MATRIX[2:3,5]<-oppbreakcolumn(HPDataset)
+  MATRIX[,6]<-Rawcombo(HPDataset)
   return(MATRIX)
 }
 ```
@@ -412,10 +412,10 @@ FormatData<-function(RawData,DataType="Old"){
   if(DataType=="Old"){
     JointData<-(cbind(RawData[,c(3:15,18)],rep(0,length=dim(RawData)[1])))
   }
-  colnames(Data)<-c("Player.ID","player.sets","opp.sets","player.games","opp.games","server", "player.points", "opp.points", "serve.result", "serve.location", "return.location", "result", "point.winner", "point.length","situational.weight")
+  colnames(JointData)<-c("PlayerID","PlayerSets","OppSets","PlayerGames","OppGames","Server", "PlayerPoints", "OppPoints", "ServeResult", "ServeLocation", "ReturnLocation", "Result", "PointWinner", "PointLength","SituationalWeight")
   JointData<-SetScoreCorrector(JointData)
   JointData<-as.tbl(JointData)
-  JointData$situational.weight<-SituationalWeights(JointData)
+  JointData$SituationalWeight<-SituationalWeights(JointData)
   return(JointData)
 }
 
@@ -424,22 +424,19 @@ FormatData<-function(RawData,DataType="Old"){
 
 
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~WORKING EXAMPLES~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~WORKING EXAMPLES~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-~~~~~~~~~~~~~~~~~~~~Now's let's play with the Women's Data already collected~~~~~~~~~~~~~~``
+~~~~~~~~~~~~~~~~~~~~Now's let's work with the Women's Data already collected~~~~~~~~~~~~~~~~~~~~~~
+All the Women's Data Together
 ```{r}
 WData<-read.csv("WTennisStats.csv")
-WServingData<-(cbind(WData[,c(3:15,18)],rep(0,length=dim(WJoint)[1])))
-WJoint<-as.tbl(WServingData)
-colnames(WJoint)<-c("Player.ID","player.sets","opp.sets","player.games","opp.games","server", "player.points", "opp.points", "serve.result", "serve.location", "return.location", "result", "point.winner", "point.length","situational.weight")
-WJoint<-SetScoreCorrector(WJoint)
-WJoint<-as.tbl(WJoint)
-WJoint$situational.weight<-SituationalWeights(WJoint)
-
-
-fullanalysismatrix(WJoint)
-
-ethandata<-read.csv("Ethan Test.csv")
-
+WJoint<-FormatData(WData)
+FullMatrix(WJoint)
 ```
 
+Let's use all of Macie Jones' data we have
+```{r}
+WData<-read.csv("WTennisStats.csv")
+WJoint<-FormatData(WData)
+FullMatrix(WJoint)
+```
