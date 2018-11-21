@@ -434,7 +434,7 @@ WJoint<-FormatData(WData)
 FullMatrix(WJoint)
 ```
 
-Let's use all of Macie Jones' data we have
+Let's use all of Macie Jones' data we have. There's some in WTennisStats and some in 
 ```{r}
 WData<-read.csv("WTennisStats.csv")
 WJoint<-FormatData(WData)
