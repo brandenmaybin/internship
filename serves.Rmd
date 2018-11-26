@@ -82,19 +82,19 @@ courtdistfunc<-function(deuce,ad,joint)
   ndeuce<-dim(deuce)[1]-ndfdeuce
   dw<-sum(deuce$ServeLocation=="W")/ndeuce
   db<-sum(deuce$ServeLocation=="B")/ndeuce
-  dl<-(sum(deuce$ServeLocation=="T")+sum(deuce$ServeLocation=="L"))/ndeuce
+  dl<-(sum(deuce$ServeLocation%in%c("L","C","T")))/ndeuce
   
   ndfad<-sum(ad$ServeResult=="D")
   nad<-dim(ad)[1]-ndfad
   aw<-sum(ad$ServeLocation=="W")/nad
   ab<-sum(ad$ServeLocation=="B")/nad
-  al<-(sum(ad$ServeLocation=="T")+sum(ad$ServeLocation=="L"))/nad
+  al<-(sum(ad$ServeLocation%in%c("L","C","T")))/nad
   
   ndfjoint<-sum(joint$ServeResult=="D")
   njoint<-dim(joint)[1]-ndfjoint
   jw<-sum(joint$ServeLocation=="W")/njoint
   jb<-sum(joint$ServeLocation=="B")/njoint
-  jl<-(sum(joint$ServeLocation=="T")+sum(joint$ServeLocation=="L"))/njoint
+  jl<-(sum(joint$ServeLocation%in%c("L","C","T")))/njoint
   
   
   courtdistlist<-c(dw,db,dl,al,ab,aw,jl,jb,jw)
@@ -116,7 +116,7 @@ acedistfunc<-function(deuce,ad,joint)
   else{
     dw<-sum(adeuce$ServeLocation=="W")/ndeuce
     db<-sum(adeuce$ServeLocation=="B")/ndeuce
-    dl<-sum(adeuce$ServeLocation=="T")/ndeuce
+    dl<-sum(adeuce$ServeLocation%in%c("L","C","T"))/ndeuce
   }
  
   
@@ -130,7 +130,7 @@ acedistfunc<-function(deuce,ad,joint)
   else{
     aw<-sum(aad$ServeLocation=="W")/nad
     ab<-sum(aad$ServeLocation=="B")/nad
-    al<-sum(aad$ServeLocation=="T")/nad
+    al<-sum(aad$ServeLocation%in%c("L","C","T"))/nad
   }
 
   
@@ -144,7 +144,7 @@ acedistfunc<-function(deuce,ad,joint)
   else{
   jw<-sum(ajoint$ServeLocation=="W")/njoint
   jb<-sum(ajoint$ServeLocation=="B")/njoint
-  jl<-sum(ajoint$ServeLocation=="T")/njoint
+  jl<-sum(ajoint$ServeLocation%in%c("L","C","T"))/njoint
   }
   
   acedistlist<-c(dw,db,dl,al,ab,aw,jl,jb,jw)
@@ -163,40 +163,34 @@ aceprobfunc<-function(deuce,ad,joint)
   adeuce<-filter(deuce,deuce$ServeResult=="A")
   ndeuce<-dim(adeuce)[1]
   if(ndeuce==0){
-    dw<-0
-    db<-0
-    dl<-0
+    dw<-db<-dl<-0
   }
   else{
     dw<-sum(adeuce$ServeLocation=="W")/njoint
     db<-sum(adeuce$ServeLocation=="B")/njoint
-    dl<-sum(adeuce$ServeLocation=="T")/njoint
+    dl<-sum(adeuce$ServeLocation%in%c("L","C","T"))/njoint
   }
  
   
   aad<-filter(ad,ad$ServeResult=="A")
   nad<-dim(aad)[1]
   if(nad==0){
-    aw<-0
-    ab<-0
-    al<-0
+    aw<-ab<-al<-0
   }
   else{
     aw<-sum(aad$ServeLocation=="W")/njoint
     ab<-sum(aad$ServeLocation=="B")/njoint
-    al<-sum(aad$ServeLocation=="T")/njoint
+    al<-sum(aad$ServeLocation%in%c("L","C","T"))/njoint
   }
   
 
   if(njoint==0){
-    jw<-0
-    jb<-0
-    jl<-0
+    jw<-jb<-jl<-0
   }
   else{
     dw<-sum(ajoint$ServeLocation=="W")/njoint
     db<-sum(ajoint$ServeLocation=="B")/njoint
-    dl<-sum(ajoint$ServeLocation=="T")/njoint
+    dl<-sum(ajoint$ServeLocation%in%c("L","C","T"))/njoint
   }
   
   
@@ -216,21 +210,21 @@ shortgamewinperc<-function(deuce,ad,joint)
   swindeuce<-as.tbl(swindeuce)
   dw<-sum(swindeuce$ServeLocation=="W")/sum(sdeuce$ServeLocation=="W")
   db<-sum(swindeuce$ServeLocation=="B")/sum(sdeuce$ServeLocation=="B")
-  dl<-sum(swindeuce$ServeLocation=="T")/sum(sdeuce$ServeLocation=="T")
+  dl<-sum(swindeuce$ServeLocation%in%c("L","C","T"))/sum(sdeuce$ServeLocation%in%c("L","C","T"))
   
   sad<-filter(ad,ad$PointLength=="S")
   swinad<-filter(sad,sad$PointWinner=="P")
   swinad<-as.tbl(swinad)
   aw<-sum(swinad$ServeLocation=="W")/sum(sad$ServeLocation=="W")
   ab<-sum(swinad$ServeLocation=="B")/sum(sad$ServeLocation=="B")
-  al<-sum(swinad$ServeLocation=="T")/sum(sad$ServeLocation=="T")
+  al<-sum(swinad$ServeLocation%in%c("L","C","T"))/sum(sad$ServeLocation%in%c("L","C","T"))
   
   sjoint<-filter(joint,joint$PointLength=="S")
   swinjoint<-filter(sjoint,sjoint$PointWinner=="P")
   swinjoint<-as.tbl(swinjoint)
   jw<-sum(swinjoint$ServeLocation=="W")/sum(sjoint$ServeLocation=="W")
   jb<-sum(swinjoint$ServeLocation=="B")/sum(sjoint$ServeLocation=="B")
-  jl<-sum(swinjoint$ServeLocation=="T")/sum(sjoint$ServeLocation=="T")
+  jl<-sum(swinjoint$ServeLocation%in%c("L","C","T"))/sum(sjoint$ServeLocation%in%c("L","C","T"))
   
   
   shortgamewinperclist<-c(dw,db,dl,al,ab,aw,jl,jb,jw)
@@ -246,19 +240,19 @@ firstcourtdist<-function(deuce,ad,joint)
   nfdeuce<-dim(fdeuce)[1]
   dw<-sum(fdeuce$ServeLocation=="W")/nfdeuce
   db<-sum(fdeuce$ServeLocation=="B")/nfdeuce
-  dl<-(sum(fdeuce$ServeLocation=="T")+sum(fdeuce$ServeLocation=="L"))/nfdeuce
+  dl<-(sum(fdeuce$ServeLocation%in%c("L","C","T")))/nfdeuce
   
   fad<-filter(ad,ad$ServeResult=="F")
   nfad<-dim(fad)[1]
   aw<-sum(fad$ServeLocation=="W")/nfad
   ab<-sum(fad$ServeLocation=="B")/nfad
-  al<-(sum(fad$ServeLocation=="T")+sum(fad$ServeLocation=="L"))/nfad
+  al<-(sum(fad$ServeLocation%in%c("L","C","T")))/nfad
   
   fjoint<-filter(joint,joint$ServeResult=="F")
   nfjoint<-dim(fjoint)[1]
   jw<-sum(fjoint$ServeLocation=="W")/nfjoint
   jb<-sum(fjoint$ServeLocation=="B")/nfjoint
-  jl<-(sum(fjoint$ServeLocation=="T")+sum(fjoint$ServeLocation=="L"))/nfjoint
+  jl<-(sum(fjoint$ServeLocation%in%c("L","C","T")))/nfjoint
   
   
   firstcourtdistlist<-c(dw,db,dl,al,ab,aw,jl,jb,jw)
@@ -274,19 +268,19 @@ secondcourtdist<-function(deuce,ad,joint)
   nsdeuce<-dim(sdeuce)[1]
   dw<-sum(sdeuce$ServeLocation=="W")/nsdeuce
   db<-sum(sdeuce$ServeLocation=="B")/nsdeuce
-  dl<-(sum(sdeuce$ServeLocation=="T")+sum(sdeuce$ServeLocation=="L"))/nsdeuce
+  dl<-(sum(sdeuce$ServeLocation%in%c("L","C","T")))/nsdeuce
   
   sad<-filter(ad,ad$ServeResult=="S")
   nsad<-dim(sad)[1]
   aw<-sum(sad$ServeLocation=="W")/nsad
   ab<-sum(sad$ServeLocation=="B")/nsad
-  al<-(sum(sad$ServeLocation=="T")+sum(sad$ServeLocation=="L"))/nsad
+  al<-(sum(sad$ServeLocation%in%c("L","C","T")))/nsad
   
   sjoint<-filter(joint,joint$ServeResult=="S")
   nsjoint<-dim(sjoint)[1]
   jw<-sum(sjoint$ServeLocation=="W")/nsjoint
   jb<-sum(sjoint$ServeLocation=="B")/nsjoint
-  jl<-(sum(sjoint$ServeLocation=="T")+sum(sjoint$ServeLocation=="L"))/nsjoint
+  jl<-(sum(sjoint$ServeLocation%in%c("L","C","T")))/nsjoint
   
   
   secondcourtdistlist<-c(dw,db,dl,al,ab,aw,jl,jb,jw)
@@ -302,7 +296,7 @@ UnderPressureDistribution<-function(deuce, ad, joint){
   NPDeuce<-dim(PDeuce)[1]
   DW<-sum(PDeuce$ServeLocation=="W")/NPDeuce
   DB<-sum(PDeuce$ServeLocation=="B")/NPDeuce
-  DL<-(sum(PDeuce$ServeLocation=="T")+sum(PDeuce$ServeLocation=="L"))/NPDeuce
+  DL<-(sum(PDeuce$ServeLocation%in%c("L","C","T")))/NPDeuce
   
   PAd<-filter(ad,ad$ServeResult=="S" & (
                         ad$PlayerPoints==2 & ad$OppPoints==3 |
@@ -311,7 +305,7 @@ UnderPressureDistribution<-function(deuce, ad, joint){
   NPAd<-dim(PAd)[1]
   AW<-sum(PAd$ServeLocation=="W")/NPAd
   AB<-sum(PAd$ServeLocation=="B")/NPAd
-  AL<-(sum(PAd$ServeLocation=="T")+sum(PAd$ServeLocation=="L"))/NPAd
+  AL<-(sum(PAd$ServeLocation%in%c("L","C","T")))/NPAd
   
   PJoint<-filter(joint,joint$ServeResult=="S" & (
                         joint$PlayerPoints==3 & joint$OppPoints==3 |
@@ -322,7 +316,7 @@ UnderPressureDistribution<-function(deuce, ad, joint){
   NPJoint<-dim(PJoint)[1]
   JW<-sum(PJoint$ServeLocation=="W")/NPJoint
   JB<-sum(PJoint$ServeLocation=="B")/NPJoint
-  JL<-(sum(PJoint$ServeLocation=="T")+sum(PJoint$ServeLocation=="L"))/NPJoint
+  JL<-(sum(PJoint$ServeLocation%in%c("L","C","T")))/NPJoint
   
   
   pressuredistlist<-c(DW, DB, DL, AL, AB, AW, JL, JB, JW)
@@ -470,10 +464,10 @@ AppliedScoring<-function(deuce, ad, joint, W=c(1,-1,0) ){
   DL<-servingscore(filter(deuce, deuce$ServeLocation=="L"))
   AW<-servingscore(filter(ad, ad$ServeLocation=="W"))
   AB<-servingscore(filter(ad, ad$ServeLocation=="B"))
-  AL<-servingscore(filter(ad, ad$ServeLocation=="L"))
+  AL<-servingscore(filter(ad, ad$ServeLocation%in%c("L","C","T")))
   JW<-servingscore(filter(joint, joint$ServeLocation=="W"))
   JB<-servingscore(filter(joint, joint$ServeLocation=="B"))
-  JL<-servingscore(filter(joint, joint$ServeLocation=="L"))
+  JL<-servingscore(filter(joint, joint$ServeLocation%in%c("L","C","T")))
   appliedscores<-c(DW, DB, DL, AL, AB, AW, JL, JB, JW)
   return(appliedscores)
 }
