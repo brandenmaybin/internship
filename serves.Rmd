@@ -106,48 +106,27 @@ AcePercFunc gives us the percentages of shots to a given area that result in ace
 ```{r}
 AcePercFunc<-function(deuce,ad,joint)
 {
-
-  adeuce<-filter(deuce,deuce$ServeLocation%in%c("W", "B", "C", "L", "T"))
-  ndeuce<-dim(adeuce)[1]
-  if(ndeuce==0){
-    dw<-0
-    db<-0
-    dl<-0
-  }
-  else{
-    dw<-sum(adeuce$ServeLocation=="W")/ndeuce
-    db<-sum(adeuce$ServeLocation=="B")/ndeuce
-    dl<-sum(adeuce$ServeLocation%in%c("L","C","T"))/ndeuce
-  }
- 
-  
-  aad<-filter(ad,ad$ServeLocation%in%c("W", "B", "C", "L", "T"))
-  nad<-dim(aad)[1]
-  if(nad==0){
-    aw<-0
-    ab<-0
-    al<-0
-  }
-  else{
-    aw<-sum(aad$ServeLocation=="W")/nad
-    ab<-sum(aad$ServeLocation=="B")/nad
-    al<-sum(aad$ServeLocation%in%c("L","C","T"))/nad
-  }
-
-  
+    
   ajoint<-filter(joint,joint$ServeLocation%in%c("W", "B", "C", "L", "T"))
   njoint<-dim(ajoint)[1]
+  
+  adeuce<-filter(deuce,deuce$ServeLocation%in%c("W", "B", "C", "L", "T"))
+  aad<-filter(ad,ad$ServeLocation%in%c("W", "B", "C", "L", "T"))
   if(njoint==0){
-    jw<-0
-    jb<-0
-    jl<-0
+    dw<-db<-dl<-aw<-ab<-al<-jw<-jb<-jl<-0
   }
   else{
-  jw<-sum(ajoint$ServeLocation=="W")/njoint
-  jb<-sum(ajoint$ServeLocation=="B")/njoint
-  jl<-sum(ajoint$ServeLocation%in%c("L","C","T"))/njoint
+    dw<-sum(adeuce$ServeLocation=="W")/njoint
+    db<-sum(adeuce$ServeLocation=="B")/njoint
+    dl<-sum(adeuce$ServeLocation%in%c("L","C","T"))/njoint
+    ab<-sum(aad$ServeLocation=="B")/njoint
+    al<-sum(aad$ServeLocation%in%c("L","C","T"))/njoint
+    aw<-sum(aad$ServeLocation=="W")/njoint
+    jw<-sum(ajoint$ServeLocation=="W")/njoint
+    jb<-sum(ajoint$ServeLocation=="B")/njoint
+    jl<-sum(ajoint$ServeLocation%in%c("L","C","T"))/njoint
   }
-  
+
   aceperclist<-c(dw,db,dl,al,ab,aw,jl,jb,jw)
   return(aceperclist)
 }
