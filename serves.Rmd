@@ -102,11 +102,12 @@ courtdistfunc<-function(deuce,ad,joint)
 }
 ```
 
-Ace Distribution Calculator that creates the second row of the table
+AcePercFunc gives us the percentages of shots to a given area that result in aces
 ```{r}
-acedistfunc<-function(deuce,ad,joint)
+AcePercFunc<-function(deuce,ad,joint)
 {
-  adeuce<-filter(deuce,deuce$ServeResult=="A")
+
+  adeuce<-filter(deuce,deuce$ServeLocation%in%c("W", "B", "C", "L", "T"))
   ndeuce<-dim(adeuce)[1]
   if(ndeuce==0){
     dw<-0
@@ -120,7 +121,7 @@ acedistfunc<-function(deuce,ad,joint)
   }
  
   
-  aad<-filter(ad,ad$ServeResult=="A")
+  aad<-filter(ad,ad$ServeLocation%in%c("W", "B", "C", "L", "T"))
   nad<-dim(aad)[1]
   if(nad==0){
     aw<-0
@@ -134,7 +135,7 @@ acedistfunc<-function(deuce,ad,joint)
   }
 
   
-  ajoint<-filter(joint,joint$ServeResult=="A")
+  ajoint<-filter(joint,joint$ServeLocation%in%c("W", "B", "C", "L", "T"))
   njoint<-dim(ajoint)[1]
   if(njoint==0){
     jw<-0
@@ -147,20 +148,20 @@ acedistfunc<-function(deuce,ad,joint)
   jl<-sum(ajoint$ServeLocation%in%c("L","C","T"))/njoint
   }
   
-  acedistlist<-c(dw,db,dl,al,ab,aw,jl,jb,jw)
-  return(acedistlist)
+  aceperclist<-c(dw,db,dl,al,ab,aw,jl,jb,jw)
+  return(aceperclist)
 }
 ```
 
 
-Ace Probability Function
+Ace Distribution Function
 ```{r}
-aceprobfunc<-function(deuce,ad,joint)
+AceDistFunc<-function(deuce,ad,joint)
 {
-  ajoint<-filter(joint,joint$ServeResult=="A")
+  ajoint<-filter(joint,joint$Result=="A" & joint$ServeLocation%in%c("W", "B", "C", "L", "T"))
   njoint<-dim(ajoint)[1]
   
-  adeuce<-filter(deuce,deuce$ServeResult=="A")
+  adeuce<-filter(deuce,deuce$Result=="A")
   ndeuce<-dim(adeuce)[1]
   if(ndeuce==0){
     dw<-db<-dl<-0
@@ -172,7 +173,7 @@ aceprobfunc<-function(deuce,ad,joint)
   }
  
   
-  aad<-filter(ad,ad$ServeResult=="A")
+  aad<-filter(ad,ad$Result=="A")
   nad<-dim(aad)[1]
   if(nad==0){
     aw<-ab<-al<-0
@@ -188,9 +189,9 @@ aceprobfunc<-function(deuce,ad,joint)
     jw<-jb<-jl<-0
   }
   else{
-    dw<-sum(ajoint$ServeLocation=="W")/njoint
-    db<-sum(ajoint$ServeLocation=="B")/njoint
-    dl<-sum(ajoint$ServeLocation%in%c("L","C","T"))/njoint
+    jw<-sum(ajoint$ServeLocation=="W")/njoint
+    jb<-sum(ajoint$ServeLocation=="B")/njoint
+    jl<-sum(ajoint$ServeLocation%in%c("L","C","T"))/njoint
   }
   
   
@@ -515,8 +516,8 @@ FullMatrix<-function(DataSet,DataType="OldSQL"){
   MATRIX[2,]<-firstcourtdist(deuce,ad,joint)
   MATRIX[3,]<-secondcourtdist(deuce,ad,joint)
   MATRIX[4,]<-UnderPressureDistribution(deuce,ad,joint)
-  MATRIX[5,]<-acedistfunc(deuce,ad,joint)
-  MATRIX[6,]<-aceprobfunc(deuce,ad,joint)
+  MATRIX[5,]<-AceDistFunc(deuce,ad,joint)
+  MATRIX[6,]<-AcePercFunc(deuce,ad,joint)
   MATRIX[7,]<-shortgamewinperc(deuce,ad,joint)
   MATRIX[8,]<-dfperc(deuce,ad,joint)
   MATRIX[9,]<-AppliedScoring(deuce,ad,joint)
@@ -545,8 +546,8 @@ ethandaj<-deuceadcreator(ethanservingdata)
   ethanad<-as.data.frame(ethandaj[2])
   ethanjoint<-as.data.frame(ethandaj[3])
 courtdistfunc(ethandeuce,ethanad,ethanjoint)
-acedistfunc(ethandeuce,ethanad,ethanjoint)
-aceprobfunc(ethandeuce,ethanad,ethanjoint)
+AcePercFunc(ethandeuce,ethanad,ethanjoint)
+AceDistFunc(ethandeuce,ethanad,ethanjoint)
 shortgamewinperc(ethandeuce,ethanad,ethanjoint)
 firstcourtdist(ethandeuce,ethanad,ethanjoint)
 secondcourtdist(ethandeuce,ethanad,ethanjoint)
