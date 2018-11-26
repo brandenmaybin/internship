@@ -446,10 +446,10 @@ SituationalWeights<-function(Data){
 
 Serving Scoring function
 ```{r}
-servingscore<-function(Dataset, W=c(1,-1,0)){
-  clutch<-rbind(filter(Dataset,Dataset$PointWinner=="P" & Dataset$PointLength=="S" & Dataset$Result %in% c("W","F") & Dataset$Server=="P"), filter(Dataset, Dataset$Result=="A" & Dataset$Server=="P"))
-  choke<-rbind(filter(Dataset,Dataset$PointWinner=="O" & Dataset$PointLength=="S" & Dataset$Result %in% c("W","F") & Dataset$Server=="P"), filter(Dataset, Dataset$Result=="D" & Dataset$Server=="P"))
-  null<-rbind(filter(Dataset, Dataset$ServeResult %in% c("F","S") & Dataset$PointLength %in% c("M","L") & Dataset$Server=="P"))
+servingscore<-function(DataSet, W=c(1,-1,0)){
+  clutch<-rbind(filter(DataSet,DataSet$PointWinner=="P" & DataSet$PointLength=="S" & DataSet$Result %in% c("W","F") & DataSet$Server=="P"), filter(DataSet, DataSet$Result=="A" & DataSet$Server=="P"))
+  choke<-rbind(filter(DataSet,DataSet$PointWinner=="O" & DataSet$PointLength=="S" & DataSet$Result %in% c("W","F") & DataSet$Server=="P"), filter(DataSet, DataSet$Result=="D" & DataSet$Server=="P"))
+  null<-rbind(filter(DataSet, DataSet$ServeResult %in% c("F","S") & DataSet$PointLength %in% c("M","L") & DataSet$Server=="P"))
   #we add an if here to catch when we run the LPcolum through serving, sicne the situational weights of low pressure situations are 0. Here, if we find all the values are 0 we just use the dimensions in the calculation
   if(sum(clutch$SituationalWeight)+sum(choke$SituationalWeight)+sum(null$SituationalWeight) == 0){
     score<-dim(clutch)[1]*W[1]+dim(choke)[1]*W[2]+dim(null)[1]*W[3]
@@ -480,12 +480,14 @@ AppliedScoring<-function(deuce, ad, joint, W=c(1,-1,0) ){
 ```
 
 FormatData: Does all the formating we need before throwing it in FullMatrix
+NewExcel doesn't sort by Player ID
+OldSQL includes player ID but doesn't sort by it, sino just puts it all together and leaves a new variable called PlayerID
 ```{r}
-FormatData<-function(RawData,DataType="Old"){
+FormatData<-function(RawData,DataType="OldSQL"){
   if(DataType=="NewExcel"){
     JointData<-(cbind(RawData[,c(1,11:23,30)],rep(0,length=dim(RawData)[1])))
   }
-  if(DataType=="Old"){
+  if(DataType=="OldSQL"){
     JointData<-(cbind(RawData[,c(3:15,18)],rep(0,length=dim(RawData)[1])))
   }
   colnames(JointData)<-c("PlayerID","PlayerSets","OppSets","PlayerGames","OppGames","Server", "PlayerPoints", "OppPoints", "ServeResult", "ServeLocation", "ReturnLocation", "Result", "PointWinner", "PointLength","SituationalWeight")
@@ -498,13 +500,17 @@ FormatData<-function(RawData,DataType="Old"){
 ```
 
 Prepare the full matrix before we throw it into a table
+NOTE: This doesn't run with player ID included
 ```{r}
-FullMatrix<-function(Dataset){
+FullMatrix<-function(DataSet,DataType="OldSQL"){
   #Format the Matrix
   MATRIX<-matrix(data=0,nrow=9,ncol = 9)
   rownames(MATRIX)<-c("Distribution", "First Serve Distribution", "Second Serve Distribution", "Under Pressure %", "Ace Distribution", "Ace Probability", "Short Game Win %", "Double Fault %", "Weighted Clutch Serving Score")
-  
-  servingdata<-cbind(pservingonly(Dataset),SituationalWeights(Dataset))
+
+  servingdata<-pservingonly(DataSet)
+  colnames(servingdata)<-c("PlayerSets","OppSets","PlayerGames","OppGames","Server", "PlayerPoints", "OppPoints", "ServeResult", "ServeLocation", "ReturnLocation", "Result", "PointWinner", "PointLength")
+    
+  servingdata<-cbind(servingdata,SituationalWeights(servingdata))
   colnames(servingdata)<-c("PlayerSets","OppSets","PlayerGames","OppGames","Server", "PlayerPoints", "OppPoints", "ServeResult", "ServeLocation", "ReturnLocation", "Result", "PointWinner", "PointLength", "SituationalWeights")
   daj<-deuceadcreator(servingdata)
     deuce<-as.data.frame(daj[1])
@@ -560,7 +566,12 @@ FullMatrix(ethanservingdata)
 
 ```{r}
 WData<-read.csv("WTennisStats.csv")
-FullMatrix(WData)
+#this cuts out our former issue by removing the PlayerID column. Remember that FullMatrix only runs with that PlayerID precluded
+TestFormat<-FormatData(WData)[2:15]
+
+#Not sure why the short game win % is wonky. 
+FullMatrix(TestFormat)
+
 ```
 
 
