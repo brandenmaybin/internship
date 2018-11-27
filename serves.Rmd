@@ -17,7 +17,7 @@ library(MASS)
 library(dplyr)
 ```
 
-###################  And the functions begin  #############################
+###################  And the Functions begin  #############################
 
 Set Score Corrector, for those situations where the set score doesn't get set back to 0-0 after a set is won
 ```{r}
@@ -40,294 +40,323 @@ SetScoreCorrector<-function(Data){
 
 Just BYU Serving
 ```{r}
-pservingonly<-function(rawdata){
-  joint<-filter(rawdata,rawdata$Server=="P")
+PServingOnly<-function(RawData){
+  Joint<-filter(RawData,RawData$Server=="P")
 }
 ```
 
-Deuce and ad creator
+Deuce and Ad Creator
 ```{r}
-deuceadcreator<-function(joint, AdScoring = FALSE){
-  #just deuce points
+DeuceAdCreator<-function(Joint, AdScoring = FALSE){
+  #just Deuce points
   
 if(AdScoring == T){
-  deuce<-rbind(joint[(joint$PlayerPoints+joint$OppPoints %% 2) == 0,])
-  ad<-rbind(joint[(joint$PlayerPoints+joint$OppPoints %% 2) == 1,])
+  Deuce<-rbind(Joint[(Joint$PlayerPoints+Joint$OppPoints %% 2) == 0,])
+  Ad<-rbind(Joint[(Joint$PlayerPoints+Joint$OppPoints %% 2) == 1,])
 }
   
 else{
-  deuce<-rbind(
-    joint[joint$PlayerPoints+joint$OppPoints == 0,],
-    joint[joint$PlayerPoints+joint$OppPoints == 2,],
-    joint[joint$PlayerPoints+joint$OppPoints == 4,])
+  Deuce<-rbind(
+    Joint[Joint$PlayerPoints+Joint$OppPoints == 0,],
+    Joint[Joint$PlayerPoints+Joint$OppPoints == 2,],
+    Joint[Joint$PlayerPoints+Joint$OppPoints == 4,])
 
-#just ad points
-  ad<-rbind(
-    joint[joint$PlayerPoints+joint$OppPoints == 1,],
-    joint[joint$PlayerPoints+joint$OppPoints == 3,],
-    joint[joint$PlayerPoints+joint$OppPoints == 5,])
+#just Ad points
+  Ad<-rbind(
+    Joint[Joint$PlayerPoints+Joint$OppPoints == 1,],
+    Joint[Joint$PlayerPoints+Joint$OppPoints == 3,],
+    Joint[Joint$PlayerPoints+Joint$OppPoints == 5,])
 }
   
-dajlist<-list(deuce,ad,joint)
-return(dajlist)
+DAJlist<-list(Deuce,Ad,Joint)
+return(DAJlist)
 }
 ```
 
 
-Court Distribution Calculator function that creates the first row of the table
+Court Distribution Calculator Function that creates the First row of the table
 ```{r}
-courtdistfunc<-function(deuce,ad,joint)
+CourtDistFunc<-function(Deuce,Ad,Joint)
 {
-  ndfdeuce<-sum(deuce$ServeResult=="D")
-  ndeuce<-dim(deuce)[1]-ndfdeuce
-  dw<-sum(deuce$ServeLocation=="W")/ndeuce
-  db<-sum(deuce$ServeLocation=="B")/ndeuce
-  dl<-(sum(deuce$ServeLocation%in%c("L","C","T")))/ndeuce
+  NDFDeuce<-sum(Deuce$ServeResult=="D")
+  NDeuce<-dim(Deuce)[1]-NDFDeuce
+  DW<-sum(Deuce$ServeLocation=="W")/NDeuce
+  DB<-sum(Deuce$ServeLocation=="B")/NDeuce
+  DL<-(sum(Deuce$ServeLocation%in%c("L","C","T")))/NDeuce
   
-  ndfad<-sum(ad$ServeResult=="D")
-  nad<-dim(ad)[1]-ndfad
-  aw<-sum(ad$ServeLocation=="W")/nad
-  ab<-sum(ad$ServeLocation=="B")/nad
-  al<-(sum(ad$ServeLocation%in%c("L","C","T")))/nad
+  NDFAd<-sum(Ad$ServeResult=="D")
+  NAd<-dim(Ad)[1]-NDFAd
+  AW<-sum(Ad$ServeLocation=="W")/NAd
+  AB<-sum(Ad$ServeLocation=="B")/NAd
+  AL<-(sum(Ad$ServeLocation%in%c("L","C","T")))/NAd
   
-  ndfjoint<-sum(joint$ServeResult=="D")
-  njoint<-dim(joint)[1]-ndfjoint
-  jw<-sum(joint$ServeLocation=="W")/njoint
-  jb<-sum(joint$ServeLocation=="B")/njoint
-  jl<-(sum(joint$ServeLocation%in%c("L","C","T")))/njoint
+  NDFJoint<-sum(Joint$ServeResult=="D")
+  NJoint<-dim(Joint)[1]-NDFJoint
+  JW<-sum(Joint$ServeLocation=="W")/NJoint
+  JB<-sum(Joint$ServeLocation=="B")/NJoint
+  JL<-(sum(Joint$ServeLocation%in%c("L","C","T")))/NJoint
   
   
-  courtdistlist<-c(dw,db,dl,al,ab,aw,jl,jb,jw)
-  return(courtdistlist)
+  CourtDistlist<-c(DW,DB,DL,AL,AB,AW,JL,JB,JW)
+  return(CourtDistlist)
 }
 ```
 
 AcePercFunc gives us the percentages of shots to a given area that result in aces
 ```{r}
-AcePercFunc<-function(deuce,ad,joint)
+AcePercFunc<-function(Deuce,Ad,Joint)
 {
     
-  ajoint<-filter(joint,joint$ServeLocation%in%c("W", "B", "C", "L", "T"))
-  njoint<-dim(ajoint)[1]
+  AJoint<-filter(Joint,Joint$ServeLocation%in%c("W", "B", "C", "L", "T"))
+  NJoint<-dim(AJoint)[1]
   
-  adeuce<-filter(deuce,deuce$ServeLocation%in%c("W", "B", "C", "L", "T"))
-  aad<-filter(ad,ad$ServeLocation%in%c("W", "B", "C", "L", "T"))
-  if(njoint==0){
-    dw<-db<-dl<-aw<-ab<-al<-jw<-jb<-jl<-0
+  ADeuce<-filter(Deuce,Deuce$ServeLocation%in%c("W", "B", "C", "L", "T"))
+  AAd<-filter(Ad,Ad$ServeLocation%in%c("W", "B", "C", "L", "T"))
+  if(NJoint==0){
+    DW<-DB<-DL<-AW<-AB<-AL<-JW<-JB<-JL<-0
   }
   else{
-    dw<-sum(adeuce$ServeLocation=="W")/njoint
-    db<-sum(adeuce$ServeLocation=="B")/njoint
-    dl<-sum(adeuce$ServeLocation%in%c("L","C","T"))/njoint
-    ab<-sum(aad$ServeLocation=="B")/njoint
-    al<-sum(aad$ServeLocation%in%c("L","C","T"))/njoint
-    aw<-sum(aad$ServeLocation=="W")/njoint
-    jw<-sum(ajoint$ServeLocation=="W")/njoint
-    jb<-sum(ajoint$ServeLocation=="B")/njoint
-    jl<-sum(ajoint$ServeLocation%in%c("L","C","T"))/njoint
+    DW<-sum(ADeuce$ServeLocation=="W")/NJoint
+    DB<-sum(ADeuce$ServeLocation=="B")/NJoint
+    DL<-sum(ADeuce$ServeLocation%in%c("L","C","T"))/NJoint
+    AB<-sum(AAd$ServeLocation=="B")/NJoint
+    AL<-sum(AAd$ServeLocation%in%c("L","C","T"))/NJoint
+    AW<-sum(AAd$ServeLocation=="W")/NJoint
+    JW<-sum(AJoint$ServeLocation=="W")/NJoint
+    JB<-sum(AJoint$ServeLocation=="B")/NJoint
+    JL<-sum(AJoint$ServeLocation%in%c("L","C","T"))/NJoint
   }
 
-  aceperclist<-c(dw,db,dl,al,ab,aw,jl,jb,jw)
-  return(aceperclist)
+  AcePercList<-c(DW,DB,DL,AL,AB,AW,JL,JB,JW)
+  return(AcePercList)
 }
 ```
 
 
 Ace Distribution Function
 ```{r}
-AceDistFunc<-function(deuce,ad,joint)
+AceDistFunc<-function(Deuce,Ad,Joint)
 {
-  ajoint<-filter(joint,joint$Result=="A" & joint$ServeLocation%in%c("W", "B", "C", "L", "T"))
-  njoint<-dim(ajoint)[1]
+  AJoint<-filter(Joint,Joint$Result=="A" & Joint$ServeLocation%in%c("W", "B", "C", "L", "T"))
+  NJoint<-dim(AJoint)[1]
   
-  adeuce<-filter(deuce,deuce$Result=="A")
-  ndeuce<-dim(adeuce)[1]
-  if(ndeuce==0){
-    dw<-db<-dl<-0
+  ADeuce<-filter(Deuce,Deuce$Result=="A")
+  NDeuce<-dim(ADeuce)[1]
+  if(NDeuce==0){
+    DW<-DB<-DL<-0
   }
   else{
-    dw<-sum(adeuce$ServeLocation=="W")/njoint
-    db<-sum(adeuce$ServeLocation=="B")/njoint
-    dl<-sum(adeuce$ServeLocation%in%c("L","C","T"))/njoint
+    DW<-sum(ADeuce$ServeLocation=="W")/NJoint
+    DB<-sum(ADeuce$ServeLocation=="B")/NJoint
+    DL<-sum(ADeuce$ServeLocation%in%c("L","C","T"))/NJoint
   }
  
   
-  aad<-filter(ad,ad$Result=="A")
-  nad<-dim(aad)[1]
-  if(nad==0){
-    aw<-ab<-al<-0
+  AAd<-filter(Ad,Ad$Result=="A")
+  NAd<-dim(AAd)[1]
+  if(NAd==0){
+    AW<-AB<-AL<-0
   }
   else{
-    aw<-sum(aad$ServeLocation=="W")/njoint
-    ab<-sum(aad$ServeLocation=="B")/njoint
-    al<-sum(aad$ServeLocation%in%c("L","C","T"))/njoint
+    AW<-sum(AAd$ServeLocation=="W")/NJoint
+    AB<-sum(AAd$ServeLocation=="B")/NJoint
+    AL<-sum(AAd$ServeLocation%in%c("L","C","T"))/NJoint
   }
   
 
-  if(njoint==0){
-    jw<-jb<-jl<-0
+  if(NJoint==0){
+    JW<-JB<-JL<-0
   }
   else{
-    jw<-sum(ajoint$ServeLocation=="W")/njoint
-    jb<-sum(ajoint$ServeLocation=="B")/njoint
-    jl<-sum(ajoint$ServeLocation%in%c("L","C","T"))/njoint
+    JW<-sum(AJoint$ServeLocation=="W")/NJoint
+    JB<-sum(AJoint$ServeLocation=="B")/NJoint
+    JL<-sum(AJoint$ServeLocation%in%c("L","C","T"))/NJoint
   }
   
   
-  aceproblist<-c(dw,db,dl,al,ab,aw,jl,jb,jw)
-  return(aceproblist)
+  AceProbList<-c(DW,DB,DL,AL,AB,AW,JL,JB,JW)
+  return(AceProbList)
 }
 ```
 
 
 Short Game Win Percentage Calculator
 ```{r}
-shortgamewinperc<-function(deuce,ad,joint)
+ShortGameWinPerc<-function(Deuce,Ad,Joint)
 {
   
-  sdeuce<-filter(deuce,deuce$PointLength=="S")
-  swindeuce<-filter(sdeuce,sdeuce$PointWinner=="P")
-  swindeuce<-as.tbl(swindeuce)
-  dw<-sum(swindeuce$ServeLocation=="W")/sum(sdeuce$ServeLocation=="W")
-  db<-sum(swindeuce$ServeLocation=="B")/sum(sdeuce$ServeLocation=="B")
-  dl<-sum(swindeuce$ServeLocation%in%c("L","C","T"))/sum(sdeuce$ServeLocation%in%c("L","C","T"))
+  SDeuce<-filter(Deuce,Deuce$PointLength=="S")
+  SWinDeuce<-filter(SDeuce,SDeuce$PointWinner=="P")
+  SWinDeuce<-as.tbl(SWinDeuce)
+  DW<-sum(SWinDeuce$ServeLocation=="W")/sum(SDeuce$ServeLocation=="W")
+  DB<-sum(SWinDeuce$ServeLocation=="B")/sum(SDeuce$ServeLocation=="B")
+  DL<-sum(SWinDeuce$ServeLocation%in%c("L","C","T"))/sum(SDeuce$ServeLocation%in%c("L","C","T"))
   
-  sad<-filter(ad,ad$PointLength=="S")
-  swinad<-filter(sad,sad$PointWinner=="P")
-  swinad<-as.tbl(swinad)
-  aw<-sum(swinad$ServeLocation=="W")/sum(sad$ServeLocation=="W")
-  ab<-sum(swinad$ServeLocation=="B")/sum(sad$ServeLocation=="B")
-  al<-sum(swinad$ServeLocation%in%c("L","C","T"))/sum(sad$ServeLocation%in%c("L","C","T"))
+  SAd<-filter(Ad,Ad$PointLength=="S")
+  SWinAd<-filter(SAd,SAd$PointWinner=="P")
+  SWinAd<-as.tbl(SWinAd)
+  AW<-sum(SWinAd$ServeLocation=="W")/sum(SAd$ServeLocation=="W")
+  AB<-sum(SWinAd$ServeLocation=="B")/sum(SAd$ServeLocation=="B")
+  AL<-sum(SWinAd$ServeLocation%in%c("L","C","T"))/sum(SAd$ServeLocation%in%c("L","C","T"))
   
-  sjoint<-filter(joint,joint$PointLength=="S")
-  swinjoint<-filter(sjoint,sjoint$PointWinner=="P")
-  swinjoint<-as.tbl(swinjoint)
-  jw<-sum(swinjoint$ServeLocation=="W")/sum(sjoint$ServeLocation=="W")
-  jb<-sum(swinjoint$ServeLocation=="B")/sum(sjoint$ServeLocation=="B")
-  jl<-sum(swinjoint$ServeLocation%in%c("L","C","T"))/sum(sjoint$ServeLocation%in%c("L","C","T"))
+  SJoint<-filter(Joint,Joint$PointLength=="S")
+  swiNJoint<-filter(SJoint,SJoint$PointWinner=="P")
+  swiNJoint<-as.tbl(swiNJoint)
+  JW<-sum(swiNJoint$ServeLocation=="W")/sum(SJoint$ServeLocation=="W")
+  JB<-sum(swiNJoint$ServeLocation=="B")/sum(SJoint$ServeLocation=="B")
+  JL<-sum(swiNJoint$ServeLocation%in%c("L","C","T"))/sum(SJoint$ServeLocation%in%c("L","C","T"))
   
   
-  shortgamewinperclist<-c(dw,db,dl,al,ab,aw,jl,jb,jw)
-  return(shortgamewinperclist)
+  ShortGameWinPerclist<-c(DW,DB,DL,AL,AB,AW,JL,JB,JW)
+  return(ShortGameWinPerclist)
 }
 ```
 
 First Serve Placement Calculator
 ```{r}
-firstcourtdist<-function(deuce,ad,joint)
+FirstCourtDist<-function(Deuce,Ad,Joint)
 {
-  fdeuce<-filter(deuce,deuce$ServeResult=="F")
-  nfdeuce<-dim(fdeuce)[1]
-  dw<-sum(fdeuce$ServeLocation=="W")/nfdeuce
-  db<-sum(fdeuce$ServeLocation=="B")/nfdeuce
-  dl<-(sum(fdeuce$ServeLocation%in%c("L","C","T")))/nfdeuce
+  FDeuce<-filter(Deuce,Deuce$ServeResult=="F")
+  NFDeuce<-dim(FDeuce)[1]
+  DW<-sum(FDeuce$ServeLocation=="W")/NFDeuce
+  DB<-sum(FDeuce$ServeLocation=="B")/NFDeuce
+  DL<-(sum(FDeuce$ServeLocation%in%c("L","C","T")))/NFDeuce
   
-  fad<-filter(ad,ad$ServeResult=="F")
-  nfad<-dim(fad)[1]
-  aw<-sum(fad$ServeLocation=="W")/nfad
-  ab<-sum(fad$ServeLocation=="B")/nfad
-  al<-(sum(fad$ServeLocation%in%c("L","C","T")))/nfad
+  FAd<-filter(Ad,Ad$ServeResult=="F")
+  NFAd<-dim(FAd)[1]
+  AW<-sum(FAd$ServeLocation=="W")/NFAd
+  AB<-sum(FAd$ServeLocation=="B")/NFAd
+  AL<-(sum(FAd$ServeLocation%in%c("L","C","T")))/NFAd
   
-  fjoint<-filter(joint,joint$ServeResult=="F")
-  nfjoint<-dim(fjoint)[1]
-  jw<-sum(fjoint$ServeLocation=="W")/nfjoint
-  jb<-sum(fjoint$ServeLocation=="B")/nfjoint
-  jl<-(sum(fjoint$ServeLocation%in%c("L","C","T")))/nfjoint
+  FJoint<-filter(Joint,Joint$ServeResult=="F")
+  NFJoint<-dim(FJoint)[1]
+  JW<-sum(FJoint$ServeLocation=="W")/NFJoint
+  JB<-sum(FJoint$ServeLocation=="B")/NFJoint
+  JL<-(sum(FJoint$ServeLocation%in%c("L","C","T")))/NFJoint
   
   
-  firstcourtdistlist<-c(dw,db,dl,al,ab,aw,jl,jb,jw)
-  return(firstcourtdistlist)
+  FirstCourtDistlist<-c(DW,DB,DL,AL,AB,AW,JL,JB,JW)
+  return(FirstCourtDistlist)
 }
 ```
 
 Second Serve Placement Calculator
 ```{r}
-secondcourtdist<-function(deuce,ad,joint)
+SecondCourtDist<-function(Deuce,Ad,Joint)
 {
-  sdeuce<-filter(deuce,deuce$ServeResult=="S")
-  nsdeuce<-dim(sdeuce)[1]
-  dw<-sum(sdeuce$ServeLocation=="W")/nsdeuce
-  db<-sum(sdeuce$ServeLocation=="B")/nsdeuce
-  dl<-(sum(sdeuce$ServeLocation%in%c("L","C","T")))/nsdeuce
+  SDeuce<-filter(Deuce,Deuce$ServeResult=="S")
+  NSDeuce<-dim(SDeuce)[1]
+  DW<-sum(SDeuce$ServeLocation=="W")/NSDeuce
+  DB<-sum(SDeuce$ServeLocation=="B")/NSDeuce
+  DL<-(sum(SDeuce$ServeLocation%in%c("L","C","T")))/NSDeuce
   
-  sad<-filter(ad,ad$ServeResult=="S")
-  nsad<-dim(sad)[1]
-  aw<-sum(sad$ServeLocation=="W")/nsad
-  ab<-sum(sad$ServeLocation=="B")/nsad
-  al<-(sum(sad$ServeLocation%in%c("L","C","T")))/nsad
+  SAd<-filter(Ad,Ad$ServeResult=="S")
+  NSAd<-dim(SAd)[1]
+  AW<-sum(SAd$ServeLocation=="W")/NSAd
+  AB<-sum(SAd$ServeLocation=="B")/NSAd
+  AL<-(sum(SAd$ServeLocation%in%c("L","C","T")))/NSAd
   
-  sjoint<-filter(joint,joint$ServeResult=="S")
-  nsjoint<-dim(sjoint)[1]
-  jw<-sum(sjoint$ServeLocation=="W")/nsjoint
-  jb<-sum(sjoint$ServeLocation=="B")/nsjoint
-  jl<-(sum(sjoint$ServeLocation%in%c("L","C","T")))/nsjoint
+  SJoint<-filter(Joint,Joint$ServeResult=="S")
+  NSJoint<-dim(SJoint)[1]
+  JW<-sum(SJoint$ServeLocation=="W")/NSJoint
+  JB<-sum(SJoint$ServeLocation=="B")/NSJoint
+  JL<-(sum(SJoint$ServeLocation%in%c("L","C","T")))/NSJoint
   
   
-  secondcourtdistlist<-c(dw,db,dl,al,ab,aw,jl,jb,jw)
-  return(secondcourtdistlist)
+  SecondCourtDistlist<-c(DW,DB,DL,AL,AB,AW,JL,JB,JW)
+  return(SecondCourtDistlist)
 }
 ```
 
-Under Pressure Calculator. Doesnt work if there's dividing by 0 issues. NPDeuce is usually the culprit. 
+Under Pressure Calculator. Doesnt work if there's dividing by 0 issues. NPDeuce is usually the culprit.
+Here's the defending side of the problem. Notice we include deuce as being a defending situation. BYU would "defend" their serve, not attack it. You'd attack a break point. 
 ```{r}
-UnderPressureDistribution<-function(deuce, ad, joint){
-  PDeuce<-filter(deuce,deuce$ServeResult=="S" &
-                        deuce$PlayerPoints==1 & deuce$OppPoints==3)
-  NPDeuce<-dim(PDeuce)[1]
-  DW<-sum(PDeuce$ServeLocation=="W")/NPDeuce
-  DB<-sum(PDeuce$ServeLocation=="B")/NPDeuce
-  DL<-(sum(PDeuce$ServeLocation%in%c("L","C","T")))/NPDeuce
+DefPressureDistribution<-function(Deuce, Ad, Joint,FSWeights=c(1,1)){
+  PDeuce<-filter(Deuce,Deuce$ServeResult%in%c("F", "S") &
+                        Deuce$PlayerPoints==1 & Deuce$OppPoints==3)
+  NPDeuce<-sum(PDeuce$ServeResult=="F")*FSWeights[1]+sum(PDeuce$ServeResult=="S")*FSWeights[2]
+  DW<-(sum(PDeuce$ServeLocation=="W" & PDeuce$ServeResult=="F") * FSWeights[1] +               sum(PDeuce$ServeLocation=="W" & PDeuce$ServeResult=="S") * FSWeights[2]) /NPDeuce
+  DB<-(sum(PDeuce$ServeLocation=="B" & PDeuce$ServeResult=="F") * FSWeights[1] +               sum(PDeuce$ServeLocation=="B" & PDeuce$ServeResult=="S") * FSWeights[2]) /NPDeuce
+  DL<-(sum(PDeuce$ServeLocation%in%c("L","C","T") & PDeuce$ServeResult=="F") * FSWeights[1] +               sum(PDeuce$ServeLocation%in%c("L","C","T") & PDeuce$ServeResult=="S") * FSWeights[2]) /NPDeuce
   
-  PAd<-filter(ad,ad$ServeResult=="S" & (
-                        ad$PlayerPoints==2 & ad$OppPoints==3 |
-                        ad$PlayerPoints==0 & ad$OppPoints==3 |
-                        ad$PlayerPoints==3 & ad$OppPoints==2 ))
-  NPAd<-dim(PAd)[1]
-  AW<-sum(PAd$ServeLocation=="W")/NPAd
-  AB<-sum(PAd$ServeLocation=="B")/NPAd
-  AL<-(sum(PAd$ServeLocation%in%c("L","C","T")))/NPAd
+  PAd<-filter(Ad,Ad$ServeResult%in%c("F", "S") & (
+                        Ad$PlayerPoints==2 & Ad$OppPoints==3 |
+                        Ad$PlayerPoints==0 & Ad$OppPoints==3))
+  NPAd<-sum(PAd$ServeResult=="F")*FSWeights[1]+sum(PAd$ServeResult=="S")*FSWeights[2]
+  AW<-(sum(PAd$ServeLocation=="W" & PAd$ServeResult=="F") * FSWeights[1] +               sum(PAd$ServeLocation=="W" & PAd$ServeResult=="S") * FSWeights[2]) /NPAd
+  AB<-(sum(PAd$ServeLocation=="B" & PAd$ServeResult=="F") * FSWeights[1] +               sum(PAd$ServeLocation=="B" & PAd$ServeResult=="S") * FSWeights[2]) /NPAd
+  AL<-(sum(PAd$ServeLocation%in%c("L","C","T") & PAd$ServeResult=="F") * FSWeights[1] +               sum(PAd$ServeLocation%in%c("L","C","T") & PAd$ServeResult=="S") * FSWeights[2]) /NPAd
   
-  PJoint<-filter(joint,joint$ServeResult=="S" & (
-                        joint$PlayerPoints==3 & joint$OppPoints==3 |
-                        joint$PlayerPoints==2 & joint$OppPoints==3 |
-                        joint$PlayerPoints==1 & joint$OppPoints==3 |
-                        joint$PlayerPoints==0 & joint$OppPoints==3 |
-                        joint$PlayerPoints==3 & joint$OppPoints==2 ))
-  NPJoint<-dim(PJoint)[1]
-  JW<-sum(PJoint$ServeLocation=="W")/NPJoint
-  JB<-sum(PJoint$ServeLocation=="B")/NPJoint
-  JL<-(sum(PJoint$ServeLocation%in%c("L","C","T")))/NPJoint
+  PJoint<-filter(Joint,Joint$ServeResult%in%c("F", "S") & (
+                        Joint$PlayerPoints==3 & Joint$OppPoints==3 |
+                        Joint$PlayerPoints==2 & Joint$OppPoints==3 |
+                        Joint$PlayerPoints==1 & Joint$OppPoints==3 |
+                        Joint$PlayerPoints==0 & Joint$OppPoints==3))
+  NPJoint<-sum(PJoint$ServeResult=="F")*FSWeights[1]+sum(PJoint$ServeResult=="S")*FSWeights[2]
+  JW<-(sum(PJoint$ServeLocation=="W" & PJoint$ServeResult=="F") * FSWeights[1] +               sum(PJoint$ServeLocation=="W" & PJoint$ServeResult=="S") * FSWeights[2]) /NPJoint
+  JB<-(sum(PJoint$ServeLocation=="B" & PJoint$ServeResult=="F") * FSWeights[1] +               sum(PJoint$ServeLocation=="B" & PJoint$ServeResult=="S") * FSWeights[2]) /NPJoint
+  JL<-(sum(PJoint$ServeLocation%in%c("L","C","T") & PJoint$ServeResult=="F") * FSWeights[1] +               sum(PJoint$ServeLocation%in%c("L","C","T") & PJoint$ServeResult=="S") * FSWeights[2]) /NPJoint
   
   
-  pressuredistlist<-c(DW, DB, DL, AL, AB, AW, JL, JB, JW)
-  return(pressuredistlist)
+  DefPressureDistlist<-c(DW, DB, DL, AL, AB, AW, JL, JB, JW)
+  return(DefPressureDistlist)
 }
 ```
-
+Here's the attacking side of that problem
+```{r}
+AtkPressureDistribution<-function(Deuce, Ad, Joint,FSWeights=c(1,1)){
+  PDeuce<-filter(Deuce,Deuce$ServeResult%in%c("F", "S") &
+                        Deuce$PlayerPoints==3 & Deuce$OppPoints==1)
+  NPDeuce<-sum(PDeuce$ServeResult=="F")*FSWeights[1]+sum(PDeuce$ServeResult=="S")*FSWeights[2]
+  DW<-(sum(PDeuce$ServeLocation=="W" & PDeuce$ServeResult=="F") * FSWeights[1] +               sum(PDeuce$ServeLocation=="W" & PDeuce$ServeResult=="S") * FSWeights[2]) /NPDeuce
+  DB<-(sum(PDeuce$ServeLocation=="B" & PDeuce$ServeResult=="F") * FSWeights[1] +               sum(PDeuce$ServeLocation=="B" & PDeuce$ServeResult=="S") * FSWeights[2]) /NPDeuce
+  DL<-(sum(PDeuce$ServeLocation%in%c("L","C","T") & PDeuce$ServeResult=="F") * FSWeights[1] +               sum(PDeuce$ServeLocation%in%c("L","C","T") & PDeuce$ServeResult=="S") * FSWeights[2]) /NPDeuce
+  PAd<-filter(Ad,Ad$ServeResult%in%c("F", "S") & (
+                        Ad$PlayerPoints==3 & Ad$OppPoints==2 |
+                        Ad$PlayerPoints==3 & Ad$OppPoints==0))
+  NPAd<-sum(PAd$ServeResult=="F")*FSWeights[1]+sum(PAd$ServeResult=="S")*FSWeights[2]
+  AW<-(sum(PAd$ServeLocation=="W" & PAd$ServeResult=="F") * FSWeights[1] +               sum(PAd$ServeLocation=="W" & PAd$ServeResult=="S") * FSWeights[2]) /NPAd
+  AB<-(sum(PAd$ServeLocation=="B" & PAd$ServeResult=="F") * FSWeights[1] +               sum(PAd$ServeLocation=="B" & PAd$ServeResult=="S") * FSWeights[2]) /NPAd
+  AL<-(sum(PAd$ServeLocation%in%c("L","C","T") & PAd$ServeResult=="F") * FSWeights[1] +               sum(PAd$ServeLocation%in%c("L","C","T") & PAd$ServeResult=="S") * FSWeights[2]) /NPAd
+  
+  PJoint<-filter(Joint,Joint$ServeResult%in%c("F", "S") & (
+                        Joint$PlayerPoints==3 & Joint$OppPoints==2 |
+                        Joint$PlayerPoints==3 & Joint$OppPoints==1 |
+                        Joint$PlayerPoints==3 & Joint$OppPoints==0))
+  NPJoint<-sum(PJoint$ServeResult=="F")*FSWeights[1]+sum(PJoint$ServeResult=="S")*FSWeights[2]
+  JW<-(sum(PJoint$ServeLocation=="W" & PJoint$ServeResult=="F") * FSWeights[1] +               sum(PJoint$ServeLocation=="W" & PJoint$ServeResult=="S") * FSWeights[2]) /NPJoint
+  JB<-(sum(PJoint$ServeLocation=="B" & PJoint$ServeResult=="F") * FSWeights[1] +               sum(PJoint$ServeLocation=="B" & PJoint$ServeResult=="S") * FSWeights[2]) /NPJoint
+  JL<-(sum(PJoint$ServeLocation%in%c("L","C","T") & PJoint$ServeResult=="F") * FSWeights[1] +               sum(PJoint$ServeLocation%in%c("L","C","T") & PJoint$ServeResult=="S") * FSWeights[2]) /NPJoint
+  
+  
+  AtkPressureDistlist<-c(DW, DB, DL, AL, AB, AW, JL, JB, JW)
+  return(AtkPressureDistlist)
+}
+```
 
 Double Fault Percentage Calculator
 ```{r}
-dfperc<-function(deuce,ad,joint)
+DFPerc<-function(Deuce,Ad,Joint)
 {
-  nddeuce<-sum(deuce$ServeResult=="D")
-  ndeuce<-dim(deuce)[1]
-  dfd<-nddeuce/ndeuce
+  NDFDeuce<-sum(Deuce$ServeResult=="D")
+  NDeuce<-dim(Deuce)[1]
+  DFD<-NDFDeuce/NDeuce
   
-  ndad<-sum(ad$ServeResult=="D")
-  nad<-dim(ad)[1]
-  dfa<-ndad/nad
+  NDFAd<-sum(Ad$ServeResult=="D")
+  NAd<-dim(Ad)[1]
+  DFA<-NDFAd/NAd
   
-  ndjoint<-sum(joint$ServeResult=="D")
-  njoint<-dim(joint)[1]
-  dfj<-ndjoint/njoint
+  NDFJoint<-sum(Joint$ServeResult=="D")
+  NJoint<-dim(Joint)[1]
+  DFJ<-NDFJoint/NJoint
   
   
-  dflist<-c(dfd,dfa,dfj)
-  return(dflist)
+  DFList<-c(rep(DFD,times=3),rep(DFA,times=3),rep(DFJ,times=3))
+  return(DFList)
 }
 ```
 
-Situational Weights adds an additional column which gives a weight score for each point
+Situational Weights Adds an Additional column which gives a weight score for each point
 40-00 gets a .3 multiplier, 40-15 a .7, 40-30 a 1.0, Deuce a 2x
 4-4 and 5-5 get a x1.5 multiplier
 Set Points get x2
@@ -353,13 +382,13 @@ SituationalWeights<-function(Data){
     if(Data$PlayerPoints[i] == 3 & Data$OppPoints[i] == 3){Multiplier[i]<-2}
   }
   
-  #Game points under duress at 4-4 or 5-5 set score. High Pressure already keeps only game points
+  #Game points under duress at 4-4 or 5-5 set score. High Pressure alreAdy keeps only game points
   for (i in 1:N){
     if(Data$PlayerGames[i] == 4 & Data$OppGames[i] == 4){Multiplier[i]<-Multiplier[i]*1.5}
     if(Data$OppGames[i] == 5 & Data$PlayerGames[i] == 5){Multiplier[i]<-Multiplier[i]*1.5}
   }
 
-  #Set Points, 1st set about to be won by either or second about to be won by the loser of the first set
+  #Set Points, 1st set about to be won by either or Second about to be won by the loser of the First set
   for (i in 1:N){
     #opp about to win the set
     if(((Data$PlayerSets[i] == 0 & Data$OppSets[i] == 0) | (Data$PlayerSets[i] == 1 & Data$OppSets[i] == 0)) & Data$PlayerGames[i] == 5 & Data$OppGames[i] == 6) {Multiplier[i]<-Multiplier[i]*2+1}
@@ -377,7 +406,7 @@ SituationalWeights<-function(Data){
     if(((Data$PlayerSets[i] == 0 & Data$OppSets[i] == 0) | (Data$PlayerSets[i] == 0 & Data$OppSets[i] == 1)) & Data$PlayerGames[i] == 5 & Data$OppGames[i] == 0) {Multiplier[i]<-Multiplier[i]*2}
   }
   
-  #Match Points in the second set
+  #Match Points in the Second set
   for(i in 1:N){
     #player about to win
     if(Data$PlayerSets[i] == 1 & Data$OppSets[i] == 0 & Data$PlayerGames[i] == 6 & Data$OppGames[i] == 5) {Multiplier[i]<-Multiplier[i]*3+1}
@@ -418,38 +447,38 @@ SituationalWeights<-function(Data){
 
 ```
 
-Serving Scoring function
+Serving Scoring Function
 ```{r}
-servingscore<-function(DataSet, W=c(1,-1,0)){
-  clutch<-rbind(filter(DataSet,DataSet$PointWinner=="P" & DataSet$PointLength=="S" & DataSet$Result %in% c("W","F") & DataSet$Server=="P"), filter(DataSet, DataSet$Result=="A" & DataSet$Server=="P"))
-  choke<-rbind(filter(DataSet,DataSet$PointWinner=="O" & DataSet$PointLength=="S" & DataSet$Result %in% c("W","F") & DataSet$Server=="P"), filter(DataSet, DataSet$Result=="D" & DataSet$Server=="P"))
-  null<-rbind(filter(DataSet, DataSet$ServeResult %in% c("F","S") & DataSet$PointLength %in% c("M","L") & DataSet$Server=="P"))
-  #we add an if here to catch when we run the LPcolum through serving, sicne the situational weights of low pressure situations are 0. Here, if we find all the values are 0 we just use the dimensions in the calculation
-  if(sum(clutch$SituationalWeight)+sum(choke$SituationalWeight)+sum(null$SituationalWeight) == 0){
-    score<-dim(clutch)[1]*W[1]+dim(choke)[1]*W[2]+dim(null)[1]*W[3]
+ServingSore<-function(DataSet, W=c(1,-1,0)){
+  Clutch<-rbind(filter(DataSet,DataSet$PointWinner=="P" & DataSet$PointLength=="S" & DataSet$Result %in% c("W","F") & DataSet$Server=="P"), filter(DataSet, DataSet$Result=="A" & DataSet$Server=="P"))
+  Choke<-rbind(filter(DataSet,DataSet$PointWinner=="O" & DataSet$PointLength=="S" & DataSet$Result %in% c("W","F") & DataSet$Server=="P"), filter(DataSet, DataSet$Result=="D" & DataSet$Server=="P"))
+  Null<-rbind(filter(DataSet, DataSet$ServeResult %in% c("F","S") & DataSet$PointLength %in% c("M","L") & DataSet$Server=="P"))
+  #we Add an if here to catch when we run the LPcolum through Serving, sicne the situational weights of low pressure situations are 0. Here, if we find all the values are 0 we just use the dimensions in the calculation
+  if(sum(Clutch$SituationalWeight)+sum(Choke$SituationalWeight)+sum(Null$SituationalWeight) == 0){
+    Score<-dim(Clutch)[1]*W[1]+dim(Choke)[1]*W[2]+dim(Null)[1]*W[3]
   }
   else{
-    score<-c(sum(clutch$SituationalWeight)*W[1]+sum(choke$SituationalWeight)*W[2]+sum(null$SituationalWeight)*W[3])
+    Score<-c(sum(Clutch$SituationalWeight)*W[1]+sum(Choke$SituationalWeight)*W[2]+sum(Null$SituationalWeight)*W[3])
   }
   
-  return(score)
+  return(Score)
 }
 ```
 
 Serving Score Applied to W/B/L D/A/J
 ```{r}
-AppliedScoring<-function(deuce, ad, joint, W=c(1,-1,0) ){
-  DW<-servingscore(filter(deuce, deuce$ServeLocation=="W"))
-  DB<-servingscore(filter(deuce, deuce$ServeLocation=="B"))
-  DL<-servingscore(filter(deuce, deuce$ServeLocation=="L"))
-  AW<-servingscore(filter(ad, ad$ServeLocation=="W"))
-  AB<-servingscore(filter(ad, ad$ServeLocation=="B"))
-  AL<-servingscore(filter(ad, ad$ServeLocation%in%c("L","C","T")))
-  JW<-servingscore(filter(joint, joint$ServeLocation=="W"))
-  JB<-servingscore(filter(joint, joint$ServeLocation=="B"))
-  JL<-servingscore(filter(joint, joint$ServeLocation%in%c("L","C","T")))
-  appliedscores<-c(DW, DB, DL, AL, AB, AW, JL, JB, JW)
-  return(appliedscores)
+AppliedScoring<-function(Deuce, Ad, Joint, W=c(1,-1,0) ){
+  DW<-ServingSore(filter(Deuce, Deuce$ServeLocation=="W"))
+  DB<-ServingSore(filter(Deuce, Deuce$ServeLocation=="B"))
+  DL<-ServingSore(filter(Deuce, Deuce$ServeLocation=="L"))
+  AW<-ServingSore(filter(Ad, Ad$ServeLocation=="W"))
+  AB<-ServingSore(filter(Ad, Ad$ServeLocation=="B"))
+  AL<-ServingSore(filter(Ad, Ad$ServeLocation%in%c("L","C","T")))
+  JW<-ServingSore(filter(Joint, Joint$ServeLocation=="W"))
+  JB<-ServingSore(filter(Joint, Joint$ServeLocation=="B"))
+  JL<-ServingSore(filter(Joint, Joint$ServeLocation%in%c("L","C","T")))
+  AppliedScores<-c(DW, DB, DL, AL, AB, AW, JL, JB, JW)
+  return(AppliedScores)
 }
 ```
 
@@ -459,12 +488,12 @@ OldSQL includes player ID but doesn't sort by it, sino just puts it all together
 ```{r}
 FormatData<-function(RawData,DataType="OldSQL"){
   if(DataType=="NewExcel"){
-    JointData<-(cbind(RawData[,c(1,11:23,30)],rep(0,length=dim(RawData)[1])))
+    JointData<-(cbind(RawData[,c(11:23,30)],rep(0,length=dim(RawData)[1])))
   }
   if(DataType=="OldSQL"){
-    JointData<-(cbind(RawData[,c(3:15,18)],rep(0,length=dim(RawData)[1])))
+    JointData<-(cbind(RawData[,c(4:15,19)],rep(0,length=dim(RawData)[1])))
   }
-  colnames(JointData)<-c("PlayerID","PlayerSets","OppSets","PlayerGames","OppGames","Server", "PlayerPoints", "OppPoints", "ServeResult", "ServeLocation", "ReturnLocation", "Result", "PointWinner", "PointLength","SituationalWeight")
+  colnames(JointData)<-c("PlayerSets","OppSets","PlayerGames","OppGames","Server", "PlayerPoints", "OppPoints", "ServeResult", "ServeLocation", "ReturnLocation", "Result", "PointWinner", "PointLength","SituationalWeight")
   JointData<-SetScoreCorrector(JointData)
   JointData<-as.tbl(JointData)
   JointData$SituationalWeight<-SituationalWeights(JointData)
@@ -478,74 +507,72 @@ NOTE: This doesn't run with player ID included
 ```{r}
 FullMatrix<-function(DataSet,DataType="OldSQL"){
   #Format the Matrix
-  MATRIX<-matrix(data=0,nrow=9,ncol = 9)
-  rownames(MATRIX)<-c("Distribution", "First Serve Distribution", "Second Serve Distribution", "Under Pressure %", "Ace Distribution", "Ace Probability", "Short Game Win %", "Double Fault %", "Weighted Clutch Serving Score")
+  MATRIX<-matrix(data=0,nrow=10,ncol = 9)
+  rownames(MATRIX)<-c("Distribution", "First Serve Distribution", "Second Serve Distribution", "Def Pressure %", "Atk Pressure %", "Ace Distribution", "Ace Probability", "Short Game Win %", "Double Fault %", "Weighted Clutch Serving Score")
 
-  servingdata<-pservingonly(DataSet)
-  colnames(servingdata)<-c("PlayerSets","OppSets","PlayerGames","OppGames","Server", "PlayerPoints", "OppPoints", "ServeResult", "ServeLocation", "ReturnLocation", "Result", "PointWinner", "PointLength")
+  ServingData<-PServingOnly(DataSet)
+  colnames(ServingData)<-c("PlayerSets","OppSets","PlayerGames","OppGames","Server", "PlayerPoints", "OppPoints", "ServeResult", "ServeLocation", "ReturnLocation", "Result", "PointWinner", "PointLength")
     
-  servingdata<-cbind(servingdata,SituationalWeights(servingdata))
-  colnames(servingdata)<-c("PlayerSets","OppSets","PlayerGames","OppGames","Server", "PlayerPoints", "OppPoints", "ServeResult", "ServeLocation", "ReturnLocation", "Result", "PointWinner", "PointLength", "SituationalWeights")
-  daj<-deuceadcreator(servingdata)
-    deuce<-as.data.frame(daj[1])
-    ad<-as.data.frame(daj[2])
-    joint<-as.data.frame(daj[3])
+  ServingData<-cbind(ServingData,SituationalWeights(ServingData))
+  colnames(ServingData)<-c("PlayerSets","OppSets","PlayerGames","OppGames","Server", "PlayerPoints", "OppPoints", "ServeResult", "ServeLocation", "ReturnLocation", "Result", "PointWinner", "PointLength", "SituationalWeights")
+  DAJ<-DeuceAdCreator(ServingData)
+    Deuce<-as.data.frame(DAJ[1])
+    Ad<-as.data.frame(DAJ[2])
+    Joint<-as.data.frame(DAJ[3])
     
-  MATRIX[1,]<-courtdistfunc(deuce,ad,joint)
-  MATRIX[2,]<-firstcourtdist(deuce,ad,joint)
-  MATRIX[3,]<-secondcourtdist(deuce,ad,joint)
-  MATRIX[4,]<-UnderPressureDistribution(deuce,ad,joint)
-  MATRIX[5,]<-AceDistFunc(deuce,ad,joint)
-  MATRIX[6,]<-AcePercFunc(deuce,ad,joint)
-  MATRIX[7,]<-shortgamewinperc(deuce,ad,joint)
-  MATRIX[8,]<-dfperc(deuce,ad,joint)
-  MATRIX[9,]<-AppliedScoring(deuce,ad,joint)
-
+  MATRIX[1,]<-CourtDistFunc(Deuce,Ad,Joint)
+  MATRIX[2,]<-FirstCourtDist(Deuce,Ad,Joint)
+  MATRIX[3,]<-SecondCourtDist(Deuce,Ad,Joint)
+  MATRIX[4,]<-DefPressureDistribution(Deuce,Ad,Joint)
+  MATRIX[5,]<-AtkPressureDistribution(Deuce,Ad,Joint)
+  MATRIX[6,]<-AceDistFunc(Deuce,Ad,Joint)
+  MATRIX[7,]<-AcePercFunc(Deuce,Ad,Joint)
+  MATRIX[8,]<-ShortGameWinPerc(Deuce,Ad,Joint)
+  MATRIX[9,]<-DFPerc(Deuce,Ad,Joint)
+  MATRIX[10,]<-AppliedScoring(Deuce,Ad,Joint)
+  
   return(MATRIX)
 }
 ```
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Here's our workspace after all the functions~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Here's our workspace after all the Functions~~~~~~~~~~~~~~~~~~~~~~~~
 
 ```{r}
-#read it in and separate out just the parts we need
-ethantest<-read.csv("Ethan test.csv",header=T)[1:71,]
-ethanservingdata<-(cbind(ethantest[,c(11:12,14:16,18:21,22:24)],ethantest[,32]))
-ethanservingdata<-as.tbl(ethanservingdata)
-ethanservingdata<-filter(ethanservingdata,ethanservingdata$server=="P")
-colnames(ethanservingdata)<-c("PlayerSets","OppSets","PlayerGames","OppGames","Server", "PlayerPoints", "OppPoints", "ServeResult", "ServeLocation", "ReturnLocation", "Result", "PointWinner", "PointLength")
+#reAd it in and separate out just the parts we need
+Ethantest<-read.csv("Ethan test.csv",header=T)[1:71,]
+EthanServingData<-(cbind(Ethantest[,c(11:12,14:16,18:21,22:24)],Ethantest[,32]))
+EthanServingData<-as.tbl(EthanServingData)
+EthanServingData<-filter(EthanServingData,EthanServingData$server=="P")
+colnames(EthanServingData)<-c("PlayerSets","OppSets","PlayerGames","OppGames","Server", "PlayerPoints", "OppPoints", "ServeResult", "ServeLocation", "ReturnLocation", "Result", "PointWinner", "PointLength")
 ```
 
 ```{r}
-#now let's try to call all of these functions
-ethanservingdata<-cbind(pservingonly(ethanservingdata),SituationalWeights(ethanservingdata))
-colnames(ethanservingdata)<-c("PlayerSets","OppSets","PlayerGames","OppGames","Server", "PlayerPoints", "OppPoints", "ServeResult", "ServeLocation", "ReturnLocation", "Result", "PointWinner", "PointLength", "SituationalWeights")
-ethandaj<-deuceadcreator(ethanservingdata)
-  ethandeuce<-as.data.frame(ethandaj[1])
-  ethanad<-as.data.frame(ethandaj[2])
-  ethanjoint<-as.data.frame(ethandaj[3])
-courtdistfunc(ethandeuce,ethanad,ethanjoint)
-AcePercFunc(ethandeuce,ethanad,ethanjoint)
-AceDistFunc(ethandeuce,ethanad,ethanjoint)
-shortgamewinperc(ethandeuce,ethanad,ethanjoint)
-firstcourtdist(ethandeuce,ethanad,ethanjoint)
-secondcourtdist(ethandeuce,ethanad,ethanjoint)
-dfperc(ethandeuce,ethanad,ethanjoint)
-UnderPressureDistribution(ethandeuce,ethanad,ethanjoint)
-AppliedScoring(ethandeuce,ethanad,ethanjoint)
-
-FullMatrix(ethanservingdata)
+#now let's try to call all of these Functions
+EthanServingData<-cbind(PServingOnly(EthanServingData),SituationalWeights(EthanServingData))
+colnames(EthanServingData)<-c("PlayerSets","OppSets","PlayerGames","OppGames","Server", "PlayerPoints", "OppPoints", "ServeResult", "ServeLocation", "ReturnLocation", "Result", "PointWinner", "PointLength", "SituationalWeights")
+EthanDAJ<-DeuceAdCreator(EthanServingData)
+  EthanDeuce<-as.data.frame(EthanDAJ[1])
+  EthanAd<-as.data.frame(EthanDAJ[2])
+  EthaNJoint<-as.data.frame(EthanDAJ[3])
+CourtDistFunc(EthanDeuce,EthanAd,EthaNJoint)
+AcePercFunc(EthanDeuce,EthanAd,EthaNJoint)
+AceDistFunc(EthanDeuce,EthanAd,EthaNJoint)
+ShortGameWinPerc(EthanDeuce,EthanAd,EthaNJoint)
+FirstCourtDist(EthanDeuce,EthanAd,EthaNJoint)
+SecondCourtDist(EthanDeuce,EthanAd,EthaNJoint)
+DFPerc(EthanDeuce,EthanAd,EthaNJoint)
+AppliedScoring(EthanDeuce,EthanAd,EthaNJoint)
 ```
 
 
 ```{r}
 WData<-read.csv("WTennisStats.csv")
-#this cuts out our former issue by removing the PlayerID column. Remember that FullMatrix only runs with that PlayerID precluded
-TestFormat<-FormatData(WData)[2:15]
+#this cuts out our former issue by removing the PlayerID column. Remember that FullMatrix only runs with that PlayerID precluded.
+
+TestFormat<-FormatData(WData)
 
 #Not sure why the short game win % is wonky. 
 FullMatrix(TestFormat)
-
 ```
 
 
