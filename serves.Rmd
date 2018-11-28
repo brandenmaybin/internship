@@ -508,7 +508,7 @@ NOTE: This doesn't run with player ID included
 FullMatrix<-function(DataSet,DataType="OldSQL"){
   #Format the Matrix
   MATRIX<-matrix(data=0,nrow=10,ncol = 9)
-  rownames(MATRIX)<-c("Distribution", "First Serve Distribution", "Second Serve Distribution", "Def Pressure %", "Atk Pressure %", "Ace Distribution", "Ace Probability", "Short Game Win %", "Double Fault %", "Weighted Clutch Serving Score")
+  rownames(MATRIX)<-c("Distribution", "First Serve Distribution", "Second Serve Distribution", "Double Fault %", "Def Pressure %", "Atk Pressure %", "Ace Distribution", "Ace Probability", "Short Game Win %", "Weighted Clutch Serving Score")
 
   ServingData<-PServingOnly(DataSet)
   colnames(ServingData)<-c("PlayerSets","OppSets","PlayerGames","OppGames","Server", "PlayerPoints", "OppPoints", "ServeResult", "ServeLocation", "ReturnLocation", "Result", "PointWinner", "PointLength")
@@ -523,12 +523,12 @@ FullMatrix<-function(DataSet,DataType="OldSQL"){
   MATRIX[1,]<-CourtDistFunc(Deuce,Ad,Joint)
   MATRIX[2,]<-FirstCourtDist(Deuce,Ad,Joint)
   MATRIX[3,]<-SecondCourtDist(Deuce,Ad,Joint)
-  MATRIX[4,]<-DefPressureDistribution(Deuce,Ad,Joint)
-  MATRIX[5,]<-AtkPressureDistribution(Deuce,Ad,Joint)
-  MATRIX[6,]<-AceDistFunc(Deuce,Ad,Joint)
-  MATRIX[7,]<-AcePercFunc(Deuce,Ad,Joint)
-  MATRIX[8,]<-ShortGameWinPerc(Deuce,Ad,Joint)
-  MATRIX[9,]<-DFPerc(Deuce,Ad,Joint)
+  MATRIX[4,]<-DFPerc(Deuce,Ad,Joint)
+  MATRIX[5,]<-DefPressureDistribution(Deuce,Ad,Joint)
+  MATRIX[6,]<-AtkPressureDistribution(Deuce,Ad,Joint)
+  MATRIX[7,]<-AceDistFunc(Deuce,Ad,Joint)
+  MATRIX[8,]<-AcePercFunc(Deuce,Ad,Joint)
+  MATRIX[9,]<-ShortGameWinPerc(Deuce,Ad,Joint)
   MATRIX[10,]<-AppliedScoring(Deuce,Ad,Joint)
   
   return(MATRIX)
