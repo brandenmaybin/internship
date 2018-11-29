@@ -7,6 +7,9 @@ output: word_document
 ```{r}
 ################################TO-DO LIST##############################################
 #probably want to build something that throws out incomplete data, or we can clean and check data before each calculation
+
+#look into formatable and xtable, Othon has the links sent to him from Prof. Blair, 
+#look more finto having our rfile write directly into an excel document that could send data to be made into a excel table. That way we remain in excel for our output that we send to the tennis team. 
 ```
 
 
