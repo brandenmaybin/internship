@@ -9,10 +9,11 @@ Serves.rmd outputs the serves table we'll use in our presentation. There'a a lon
 
 ################################TO-DO LIST##############################################
 Probably want to build something that throws out incomplete data, or we can clean and check data before each calculation
+We need a way to cut the end off of the excel data files we get from the matches. We could do it manually each time, or write a function to lop the end off of it each time. 
 
-For the formatting of the tables
-Look into formatable and xtable, Othon has the links sent to him from Prof. Blair, 
-Look more into having our rfile write directly into an excel document that could send data to be made into a excel table. That way we remain in excel for our output that we send to the tennis team. 
+For the formatting of the tables:
+  Look into formatable and xtable, Othon has the links sent to him from Prof. Blair, 
+  Look more into having our rfile write directly into an excel document that could send data to be made into a excel table. That way we remain in excel for our output that we send to the tennis team. 
 
 ```{r}
 #call our necessary libraries
@@ -493,7 +494,7 @@ OldSQL includes player ID but doesn't sort by it, sino just puts it all together
 ```{r}
 FormatData<-function(RawData,DataType="OldSQL"){
   if(DataType=="NewExcel"){
-    JointData<-(cbind(RawData[,c(11:23,30)],rep(0,length=dim(RawData)[1])))
+    JointData<-(cbind(RawData[,c(11,12,14:16,18:24,32)],rep(0,length=dim(RawData)[1])))
   }
   if(DataType=="OldSQL"){
     JointData<-(cbind(RawData[,c(4:15,19)],rep(0,length=dim(RawData)[1])))
@@ -542,41 +543,25 @@ FullMatrix<-function(DataSet,DataType="OldSQL"){
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Here's our workspace after all the Functions~~~~~~~~~~~~~~~~~~~~~~~~
 
+Test Example using the data we have from the 2 intramural test cases with the 2-shot model 
 ```{r}
-#reAd it in and separate out just the parts we need
-Ethantest<-read.csv("Ethan test.csv",header=T)[1:71,]
-EthanServingData<-(cbind(Ethantest[,c(11:12,14:16,18:21,22:24)],Ethantest[,32]))
-EthanServingData<-as.tbl(EthanServingData)
-EthanServingData<-filter(EthanServingData,EthanServingData$server=="P")
-colnames(EthanServingData)<-c("PlayerSets","OppSets","PlayerGames","OppGames","Server", "PlayerPoints", "OppPoints", "ServeResult", "ServeLocation", "ReturnLocation", "Result", "PointWinner", "PointLength")
+Ethan<-read.csv("Ethan Test.csv")[1:71,]
+Paul<-read.csv("Paul Test.csv")[1:81,]
+TestIntramurals<-rbind(Ethan,Paul)
+#this cuts out our former issue by removing the PlayerID column. Remember that FullMatrix only runs with that PlayerID precluded.
+
+TestFormat<-FormatData(TestIntramurals,DataType = "NewExcel")
+
+FullMatrix(TestFormat)
 ```
 
-```{r}
-#now let's try to call all of these Functions
-EthanServingData<-cbind(PServingOnly(EthanServingData),SituationalWeights(EthanServingData))
-colnames(EthanServingData)<-c("PlayerSets","OppSets","PlayerGames","OppGames","Server", "PlayerPoints", "OppPoints", "ServeResult", "ServeLocation", "ReturnLocation", "Result", "PointWinner", "PointLength", "SituationalWeights")
-EthanDAJ<-DeuceAdCreator(EthanServingData)
-  EthanDeuce<-as.data.frame(EthanDAJ[1])
-  EthanAd<-as.data.frame(EthanDAJ[2])
-  EthaNJoint<-as.data.frame(EthanDAJ[3])
-CourtDistFunc(EthanDeuce,EthanAd,EthaNJoint)
-AcePercFunc(EthanDeuce,EthanAd,EthaNJoint)
-AceDistFunc(EthanDeuce,EthanAd,EthaNJoint)
-ShortGameWinPerc(EthanDeuce,EthanAd,EthaNJoint)
-FirstCourtDist(EthanDeuce,EthanAd,EthaNJoint)
-SecondCourtDist(EthanDeuce,EthanAd,EthaNJoint)
-DFPerc(EthanDeuce,EthanAd,EthaNJoint)
-AppliedScoring(EthanDeuce,EthanAd,EthaNJoint)
-```
-
-
+Test Example using the data pulled out of WTennisStats from the SQL table. Year Unknown. 
 ```{r}
 WData<-read.csv("WTennisStats.csv")
 #this cuts out our former issue by removing the PlayerID column. Remember that FullMatrix only runs with that PlayerID precluded.
 
 TestFormat<-FormatData(WData)
 
-#Not sure why the short game win % is wonky. 
 FullMatrix(TestFormat)
 ```
 
