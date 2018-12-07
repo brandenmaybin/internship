@@ -4,16 +4,15 @@ author: "Othon Hamill"
 date: "October 24, 2018"
 output: word_document
 ---
-```{r}
+
+Serves.rmd outputs the serves table we'll use in our presentation. There'a a long-long-long list of functions but the last chunk uses them all to output our table. 
+
 ################################TO-DO LIST##############################################
-#probably want to build something that throws out incomplete data, or we can clean and check data before each calculation
-#Correct Ace Dist function for dividng by 0 issues on teh deuce and add side. Joint is already fine. 
+Probably want to build something that throws out incomplete data, or we can clean and check data before each calculation
 
-
-#look into formatable and xtable, Othon has the links sent to him from Prof. Blair, 
-#look more finto having our rfile write directly into an excel document that could send data to be made into a excel table. That way we remain in excel for our output that we send to the tennis team. 
-```
-
+For the formatting of the tables
+Look into formatable and xtable, Othon has the links sent to him from Prof. Blair, 
+Look more into having our rfile write directly into an excel document that could send data to be made into a excel table. That way we remain in excel for our output that we send to the tennis team. 
 
 ```{r}
 #call our necessary libraries
