@@ -376,14 +376,14 @@ FullMatrix<-function(Dataset){
 
 FormatData: Does all the formating we need before throwing it in FullMatrix
 ```{r}
-FormatData<-function(RawData,DataType="Old"){
+FormatData<-function(RawData,DataType="OldSQL"){
   if(DataType=="NewExcel"){
-    JointData<-(cbind(RawData[,c(1,11:23,30)],rep(0,length=dim(RawData)[1])))
+    JointData<-(cbind(RawData[,c(11,12,14:16,18:24,32)],rep(0,length=dim(RawData)[1])))
   }
-  if(DataType=="Old"){
-    JointData<-(cbind(RawData[,c(3:15,18)],rep(0,length=dim(RawData)[1])))
+  if(DataType=="OldSQL"){
+    JointData<-(cbind(RawData[,c(12:13,15:17,19:25,33)],rep(0,length=dim(RawData)[1])))
   }
-  colnames(JointData)<-c("PlayerID","PlayerSets","OppSets","PlayerGames","OppGames","Server", "PlayerPoints", "OppPoints", "ServeResult", "ServeLocation", "ReturnLocation", "Result", "PointWinner", "PointLength","SituationalWeight")
+  colnames(JointData)<-c("PlayerSets","OppSets","PlayerGames","OppGames","Server", "PlayerPoints", "OppPoints", "ServeResult", "ServeLocation", "ReturnLocation", "Result", "PointWinner", "PointLength","SituationalWeight")
   JointData<-SetScoreCorrector(JointData)
   JointData<-as.tbl(JointData)
   JointData$SituationalWeight<-SituationalWeights(JointData)
@@ -398,9 +398,9 @@ FormatData<-function(RawData,DataType="Old"){
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~WORKING EXAMPLES~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ~~~~~~~~~~~~~~~~~~~~Now's let's work with the Women's Data already collected~~~~~~~~~~~~~~~~~~~~~~
-All the Women's Data Together
+All the Women's Data Together runs, as well as individual players' data
 ```{r}
-WData<-read.csv("WTennisStats.csv")
+WData<-read.csv("MJones.csv")
 WJoint<-FormatData(WData)
 FullMatrix(WJoint)
 ```

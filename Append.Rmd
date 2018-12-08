@@ -100,8 +100,9 @@ Here we'll create the datasets we'll be using and constantly updating.
 Here we'll add in and separate the 2018 Women's Data Parker has sent in from last year. Turns out it completely overlaps with the WTennisData dataset. that worked out to be all of the january 26th matches as contained in Parker's dataset. 
 ```{r}
 WComb2018o<-read.csv("wcomb.csv")
+WTest<-read.csv("WTennisStats.csv")
 WComb2018<-WComb2018o[,c(17,3,1,11,12,14:16, 18:30)]
-colnames(WComb2018)<-colnames(WTennisStats)
+colnames(WComb2018)<-colnames(WTest)
 
 HKaur1<-WComb2018[1:71,]
 HKaur<-Appender("Hermehr Kaur", Old=EmptySet, New=HKaur1, "26jan2018", "Win", "R", "R")

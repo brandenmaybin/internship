@@ -497,7 +497,7 @@ FormatData<-function(RawData,DataType="OldSQL"){
     JointData<-(cbind(RawData[,c(11,12,14:16,18:24,32)],rep(0,length=dim(RawData)[1])))
   }
   if(DataType=="OldSQL"){
-    JointData<-(cbind(RawData[,c(4:15,19)],rep(0,length=dim(RawData)[1])))
+    JointData<-(cbind(RawData[,c(12:13,15:17,19:25,33)],rep(0,length=dim(RawData)[1])))
   }
   colnames(JointData)<-c("PlayerSets","OppSets","PlayerGames","OppGames","Server", "PlayerPoints", "OppPoints", "ServeResult", "ServeLocation", "ReturnLocation", "Result", "PointWinner", "PointLength","SituationalWeight")
   JointData<-SetScoreCorrector(JointData)
@@ -505,7 +505,6 @@ FormatData<-function(RawData,DataType="OldSQL"){
   JointData$SituationalWeight<-SituationalWeights(JointData)
   return(JointData)
 }
-
 ```
 
 Prepare the full matrix before we throw it into a table
@@ -555,14 +554,15 @@ TestFormat<-FormatData(TestIntramurals,DataType = "NewExcel")
 FullMatrix(TestFormat)
 ```
 
-Test Example using the data pulled out of WTennisStats from the SQL table. Year Unknown. 
+Here's Parker's Data.
 ```{r}
-WData<-read.csv("WTennisStats.csv")
+WRaw<-read.csv("MJones.csv")
 #this cuts out our former issue by removing the PlayerID column. Remember that FullMatrix only runs with that PlayerID precluded.
 
-TestFormat<-FormatData(WData)
+WRaw<-FormatData(WRaw)
 
-FullMatrix(TestFormat)
+FullMatrix(WRaw)
+dim(WRaw)
 ```
 
 
