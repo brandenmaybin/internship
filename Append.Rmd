@@ -8,22 +8,14 @@ output: word_document
 The purpose of this file is to add new match data onto the profiles of each player
 
 ###########Functions unique to this file#####################
+
 ```{r}
-WTennisStats<-read.csv("WTennisStats.csv")
+#Date should be in a ddmmmyyy i.e. 4jan2018 or 24feb2017
+Appender<-function(PlayerID, Old, New, Date, FinalResult, BYUHand, OppHand){
 
-MJonesNew<-filter(WTennisStats,WTennisStats$PlayerID=="Macie Jones")
-
-N<-dim(MJonesNew)[1]
-
-#Declaring variable's we'll use
-Date<-"26jan2018"
-Date<-as.Date(Date,"%d%b%Y")
-FinalResult<-"Win"
-BYUHand<-"R"
-OppHand<-"R"
-
-
-MJonesToInput <- data.frame(PlayerID=rep("Mayci Jones",times=N),
+  N<-dim(New)[1]
+  Date<-as.Date(Date,"%d%b%Y")
+  ToInput <- data.frame(PlayerID=rep(PlayerID,times=N),
                      SeasonID=rep("-",times=N),
                      MatchID=rep("-",times=N),
                      Date=rep(Date,times=N),
@@ -33,30 +25,103 @@ MJonesToInput <- data.frame(PlayerID=rep("Mayci Jones",times=N),
                      PlayerLR=rep(BYUHand,times=N),
                      OppStyle=rep("-",times=N),
                      OppLR=rep(OppHand,times=N),
-                     PlayerSets=MJonesNew$PlayerSets,
-                     OppSets=MJonesNew$OpponentSets,
+                     PlayerSets=New$PlayerSets,
+                     OppSets=New$OpponentSets,
                      GameID=rep("-",times=N),
-                     PlayerGames=MJonesNew$PlayerGames,
-                     OppGames=MJonesNew$OpponentGames,
-                     Server=MJonesNew$Server,
+                     PlayerGames=New$PlayerGames,
+                     OppGames=New$OpponentGames,
+                     Server=New$Server,
                      PointID=rep("-",times=N),
-                     PlayerPoints=MJonesNew$PlayerPoints,
-                     OppPoints=MJonesNew$OpponentPoints,
-                     ServeResult=MJonesNew$ServeResult,
-                     ServeLocation=MJonesNew$ServeLocation,
-                     ReturnLocation=MJonesNew$Returns,
-                     Result=MJonesNew$PointResult,
-                     PointWinner=MJonesNew$PointWinner,
-                     FinalShotType=MJonesNew$ShotType,
-                     FinalForeBack=MJonesNew$ForeBack,
-                     FinalCrossLine=MJonesNew$CrossLine,
+                     PlayerPoints=New$PlayerPoints,
+                     OppPoints=New$OpponentPoints,
+                     ServeResult=New$ServeResult,
+                     ServeLocation=New$ServeLocation,
+                     ReturnLocation=New$Returns,
+                     Result=New$PointResult,
+                     PointWinner=New$PointWinner,
+                     FinalShotType=New$ShotType,
+                     FinalForeBack=New$ForeBack,
+                     FinalCrossLine=New$CrossLine,
                      PenumltimateShotType=rep("-",times=N),
                      PenumltimateForeBack=rep("-",times=N),
                      PenumltimateCrossLine=rep("-",times=N),
                      NetPlay=rep("-",times=N),
-                     PointLength=MJonesNew$PointLength,
-                     ErrorPosition=MJonesNew$ErrorPosition,
-                     Comments=MJonesNew$Comment,
+                     PointLength=New$PointLength,
+                     ErrorPosition=New$ErrorPosition,
+                     Comments=New$Comment,
                  stringsAsFactors=FALSE)
+  Appended<-rbind(Old,ToInput)
+  return(Appended)
+}
+```
+
+
+Now we build an empty set to begin the appending process
+```{r}
+EmptySet <- data.frame(PlayerID=character(),
+                     SeasonID=character(),
+                     MatchID=character(),
+                     Date=as.Date(character()),
+                     HomeAway=character(),
+                     WinLoss=character(),
+                     PlayerStyle=character(),
+                     PlayerLR=character(),
+                     OppStyle=character(),
+                     OppLR=character(),
+                     PlayerSets=numeric(),
+                     OppSets=numeric(),
+                     GameID=character(),
+                     PlayerGames=numeric(),
+                     OppGames=numeric(),
+                     Server=character(),
+                     PointID=character(),
+                     PlayerPoints=numeric(),
+                     OppPoints=numeric(),
+                     ServeResult=character(),
+                     ServeLocation=character(),
+                     ReturnLocation=character(),
+                     Result=character(),
+                     PointWinner=character(),
+                     FinalShotType=character(),
+                     FinalForeBack=character(),
+                     FinalCrossLine=character(),
+                     PenumltimateShotType=character(),
+                     PenumltimateForeBack=character(),
+                     PenumltimateCrossLine=character(),
+                     NetPlay=character(),
+                     PointLength=character(),
+                     ErrorPosition=character(),
+                     Comments=character(),
+                 stringsAsFactors=FALSE)
+```
+
+
+Here we'll create the datasets we'll be using and constantly updating. Here are the ones from the WTennisStats file that came straight from the SQL table
+```{r}
+WTennisStats<-read.csv("WTennisStats.csv")
+
+MJonesNew<-filter(WTennisStats,WTennisStats$PlayerID=="Macie Jones")
+MJones<-Appender("Mayci Jones", Old=EmptySet, New=MJonesNew, "26jan2018", "Win", "R", "R")
+write.csv(MJones,'MJones.csv')
+
+SSmithNew<-filter(WTennisStats,WTennisStats$PlayerID=="Samantha Smith")
+SSmith<-Appender("Samantha Smith", Old=EmptySet, New=SSmithNew, "26jan2018", "Win", "R", "R")
+write.csv(SSmith,'SSmith.csv')
+
+AAbramyanNew<-filter(WTennisStats,WTennisStats$PlayerID=="Anastasia Abramyan")
+AAbramyan<-Appender("Anastasia Abramyan", Old=EmptySet, New=AAbramyanNew, "26jan2018", "Win", "R", "R")
+write.csv(AAbramyan,'AAbramyan.csv')
+
+PMalykhNew<-filter(WTennisStats,WTennisStats$PlayerID=="Polina Malykh")
+PMalykh<-Appender("Polina Malykh", Old=EmptySet, New=PMalykhNew, "26jan2018", "Win", "R", "R")
+write.csv(PMalykh,'PMalykh.csv')
+
+KCusickNew<-filter(WTennisStats,WTennisStats$PlayerID=="Kate Cusick")
+KCusick<-Appender("Kate Cusick", Old=EmptySet, New=KCusickNew, "26jan2018", "Win", "R", "R")
+write.csv(KCusick,'KCusick.csv')
+
+HKaurNew<-filter(WTennisStats,WTennisStats$PlayerID=="Hermehr Kaur")
+HKaur<-Appender("Hermehr Kaur", Old=EmptySet, New=HKaurNew, "26jan2018", "Win", "R", "R")
+write.csv(HKaur,'HKaur.csv')
 ```
 
