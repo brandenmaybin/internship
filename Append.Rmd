@@ -55,7 +55,6 @@ Appender<-function(PlayerID, Old, New, Date, FinalResult, BYUHand, OppHand){
 }
 ```
 
-
 Now we build an empty set to begin the appending process
 ```{r}
 EmptySet <- data.frame(PlayerID=character(),
@@ -95,33 +94,63 @@ EmptySet <- data.frame(PlayerID=character(),
                  stringsAsFactors=FALSE)
 ```
 
+#########        Here's the actual workspace       ##############
+Here we'll create the datasets we'll be using and constantly updating.
 
-Here we'll create the datasets we'll be using and constantly updating. Here are the ones from the WTennisStats file that came straight from the SQL table
+Here we'll add in and separate the 2018 Women's Data Parker has sent in from last year. Turns out it completely overlaps with the WTennisData dataset. that worked out to be all of the january 26th matches as contained in Parker's dataset. 
 ```{r}
-WTennisStats<-read.csv("WTennisStats.csv")
+WComb2018o<-read.csv("wcomb.csv")
+WComb2018<-WComb2018o[,c(17,3,1,11,12,14:16, 18:30)]
+colnames(WComb2018)<-colnames(WTennisStats)
 
-MJonesNew<-filter(WTennisStats,WTennisStats$PlayerID=="Macie Jones")
-MJones<-Appender("Mayci Jones", Old=EmptySet, New=MJonesNew, "26jan2018", "Win", "R", "R")
-write.csv(MJones,'MJones.csv')
+HKaur1<-WComb2018[1:71,]
+HKaur<-Appender("Hermehr Kaur", Old=EmptySet, New=HKaur1, "26jan2018", "Win", "R", "R")
+HKaur2<-WComb2018[1517:1563,]
+HKaur<-Appender("Hermehr Kaur", Old=HKaur, New=HKaur2, "2mar2018", "-", "R", "R")
+write.csv(HKaur,'HKaur.csv')
 
-SSmithNew<-filter(WTennisStats,WTennisStats$PlayerID=="Samantha Smith")
-SSmith<-Appender("Samantha Smith", Old=EmptySet, New=SSmithNew, "26jan2018", "Win", "R", "R")
-write.csv(SSmith,'SSmith.csv')
-
-AAbramyanNew<-filter(WTennisStats,WTennisStats$PlayerID=="Anastasia Abramyan")
-AAbramyan<-Appender("Anastasia Abramyan", Old=EmptySet, New=AAbramyanNew, "26jan2018", "Win", "R", "R")
-write.csv(AAbramyan,'AAbramyan.csv')
-
-PMalykhNew<-filter(WTennisStats,WTennisStats$PlayerID=="Polina Malykh")
-PMalykh<-Appender("Polina Malykh", Old=EmptySet, New=PMalykhNew, "26jan2018", "Win", "R", "R")
-write.csv(PMalykh,'PMalykh.csv')
-
-KCusickNew<-filter(WTennisStats,WTennisStats$PlayerID=="Kate Cusick")
-KCusick<-Appender("Kate Cusick", Old=EmptySet, New=KCusickNew, "26jan2018", "Win", "R", "R")
+KCusick1<-WComb2018[72:160,]
+KCusick<-Appender("Kate Cusick", Old=EmptySet, New=KCusick1, "26jan2018", "Win", "R", "R")
+KCusick2<-WComb2018[1564:1726,]
+KCusick<-Appender("Kate Cusick", Old=KCusick, New=KCusick2, "16feb2018", "Loss", "R", "R")
 write.csv(KCusick,'KCusick.csv')
 
-HKaurNew<-filter(WTennisStats,WTennisStats$PlayerID=="Hermehr Kaur")
-HKaur<-Appender("Hermehr Kaur", Old=EmptySet, New=HKaurNew, "26jan2018", "Win", "R", "R")
-write.csv(HKaur,'HKaur.csv')
+SSmith1<-WComb2018[161:262,]
+SSmith<-Appender("Samantha Smith", Old=EmptySet, New=SSmith1, "26jan2018", "Win", "R", "R")
+write.csv(SSmith,'SSmith.csv')
+
+AAbramyan1<-WComb2018[263:384,]
+AAbramyan<-Appender("Anastasia Abramyan", Old=EmptySet, New=AAbramyan1, "26jan2018", "Win", "R", "R")
+AAbramyan2<-WComb2018[477:625,]
+AAbramyan<-Appender("Anastasia Abramyan", Old=AAbramyan, New=AAbramyan2, "16feb2018", "Loss", "R", "R")
+AAbramyan3<-WComb2018[1898:2083,]
+AAbramyan<-Appender("Anastasia Abramyan", Old=AAbramyan, New=AAbramyan3, "24mar2018", "Win", "R", "R")
+write.csv(AAbramyan,'AAbramyan.csv')
+
+MJones1<-WComb2018[385:476,]
+MJones<-Appender("Mayci Jones", Old=EmptySet, New=MJones1, "26jan2018", "Win", "R", "R")
+MJones2<-WComb2018[954:1062,]
+MJones<-Appender("Mayci Jones", Old=MJones, New=MJones2, "16feb2018", "Loss", "R", "R")
+MJones3<-WComb2018[1174:1290,]
+MJones<-Appender("Mayci Jones", Old=MJones, New=MJones3, "3mar2018", "Loss", "R", "R")
+MJones4<-WComb2018[1291:1433,]
+MJones<-Appender("Mayci Jones", Old=MJones, New=MJones4, "2mar2018", "-", "R", "R")
+MJones5<-WComb2018[1727:1897,]
+MJones<-Appender("Mayci Jones", Old=MJones, New=MJones5, "24mar2018", "Loss", "R", "R")
+write.csv(MJones,'MJones.csv')
+
+PMalykh1<-WComb2018[626:715,]
+PMalykh<-Appender("Polina Malykh", Old=EmptySet, New=PMalykh1, "26jan2018", "Win", "R", "R")
+PMalykh2<-WComb2018[716:850,]
+PMalykh<-Appender("Polina Malykh", Old=PMalykh, New=PMalykh2, "16feb2018", "Win", "R", "R")
+write.csv(PMalykh,'PMalykh.csv')
+
+TBeckman1<-WComb2018[851:953,]
+TBeckman<-Appender("TBeckman", Old=EmptySet, New=TBeckman1, "16feb2018", "-", "R", "R")
+
+MAlmeida1<-WComb2018[1063:1173,]
+MAlmdeida<-Appender("Madeline Almeida", Old=EmptySet, New=MAlmeida1, "3mar2018", "-", "R", "R")
+MAlmeida2<-WComb2018[1434:1516,]
+MAlmdeida<-Appender("Madeline Almeida", Old=MAlmdeida, New=MAlmeida2, "18mar2018", "Win", "R", "R")
 ```
 
