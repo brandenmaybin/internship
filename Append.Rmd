@@ -1,0 +1,62 @@
+---
+title: "appender"
+author: "Othon Hamill"
+date: "12/7/2018"
+output: word_document
+---
+
+The purpose of this file is to add new match data onto the profiles of each player
+
+###########Functions unique to this file#####################
+```{r}
+WTennisStats<-read.csv("WTennisStats.csv")
+
+MJonesNew<-filter(WTennisStats,WTennisStats$PlayerID=="Macie Jones")
+
+N<-dim(MJonesNew)[1]
+
+#Declaring variable's we'll use
+Date<-"26jan2018"
+Date<-as.Date(Date,"%d%b%Y")
+FinalResult<-"Win"
+BYUHand<-"R"
+OppHand<-"R"
+
+
+MJonesToInput <- data.frame(PlayerID=rep("Mayci Jones",times=N),
+                     SeasonID=rep("-",times=N),
+                     MatchID=rep("-",times=N),
+                     Date=rep(Date,times=N),
+                     HomeAway=rep("Home",times=N),
+                     WinLoss=rep(FinalResult,times=N),
+                     PlayerStyle=rep("-",times=N),
+                     PlayerLR=rep(BYUHand,times=N),
+                     OppStyle=rep("-",times=N),
+                     OppLR=rep(OppHand,times=N),
+                     PlayerSets=MJonesNew$PlayerSets,
+                     OppSets=MJonesNew$OpponentSets,
+                     GameID=rep("-",times=N),
+                     PlayerGames=MJonesNew$PlayerGames,
+                     OppGames=MJonesNew$OpponentGames,
+                     Server=MJonesNew$Server,
+                     PointID=rep("-",times=N),
+                     PlayerPoints=MJonesNew$PlayerPoints,
+                     OppPoints=MJonesNew$OpponentPoints,
+                     ServeResult=MJonesNew$ServeResult,
+                     ServeLocation=MJonesNew$ServeLocation,
+                     ReturnLocation=MJonesNew$Returns,
+                     Result=MJonesNew$PointResult,
+                     PointWinner=MJonesNew$PointWinner,
+                     FinalShotType=MJonesNew$ShotType,
+                     FinalForeBack=MJonesNew$ForeBack,
+                     FinalCrossLine=MJonesNew$CrossLine,
+                     PenumltimateShotType=rep("-",times=N),
+                     PenumltimateForeBack=rep("-",times=N),
+                     PenumltimateCrossLine=rep("-",times=N),
+                     NetPlay=rep("-",times=N),
+                     PointLength=MJonesNew$PointLength,
+                     ErrorPosition=MJonesNew$ErrorPosition,
+                     Comments=MJonesNew$Comment,
+                 stringsAsFactors=FALSE)
+```
+
