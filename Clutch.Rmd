@@ -6,22 +6,12 @@ output: word_document
 ---
 
 ```{r}
-########################CURRENT WORK############################
-#We're changing the way we weight points themselves situationally, doing weighting as described in the scoring methodology page of the google slides presentation. 
-
-
 #########################TO DO LIST############################
-#Weights, Whether Clutch play and serves are equally valued as well as the actual values for Clutch, Null, and Choke. 
-
-#How are we going to deal with deuce points being both Hold and Break? Right now I'm including them in both, but we could just add another category since it's such a higher stress situation than a normal Break or Hold Opprotunity :: RESOLVED WITH WEIGHTING
-
 #How are we going to deal with returns hit into the net? 
 
 #We need to take out possible tieBreaks since they mess with Data
 
 #We have the Data properly corrected for the set set/game Score corrections, but not for any possible match/set Score issues 
-
-#What the heck is the weighted combo column for?
 ```
 
 ```{r}
@@ -30,7 +20,10 @@ library(alr3)
 library(MASS)
 library(dplyr)
 ```
-
+```{r}
+library(sass)
+library(gt)
+```
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Functions~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -402,5 +395,16 @@ All the Women's Data Together runs, as well as individual players' data
 ```{r}
 WData<-read.csv("MJones.csv")
 WJoint<-FormatData(WData)
-FullMatrix(WJoint)
+(A<-FullMatrix(WJoint))
 ```
+
+```{r}
+TabA<-gt(A, rowname_col = c("Clutch Serving Score","Clutch Playing Score","Overall Clutch Score"),
+      rownames_to_stub = TRUE)
+TabA %>%
+  tab_header(
+    title = "Clutch Scoring Table",
+    subtitle = paste(unique(WData$PlayerID), "data from", min(as.Date(WData$Date)), "to", max(as.Date(WData$Date))))
+
+```
+
