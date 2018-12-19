@@ -19,10 +19,12 @@ output: word_document
 library(alr3)
 library(MASS)
 library(dplyr)
-```
-```{r}
+library(future.apply)
+library(furrr)
 library(sass)
 library(gt)
+library(tictoc)
+library(openxlsx)
 ```
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Functions~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -41,6 +43,8 @@ SetScoreCorrector<-function(Data){
     #here we correct the game/set Scores. We make the assumption our Data has the sets correct
     Data$PlayerGames<-Data$PlayerGames-Errors*(6)
   
+  #here's our work for when  
+    
     return(Data)
 }
 ```
@@ -186,27 +190,38 @@ ServingScore<-function(Dataset, W=c(1,-1,0)){
     Score<-c(sum(Clutch$SituationalWeight)*W[1]+sum(Choke$SituationalWeight)*W[2]+sum(Null$SituationalWeight)*W[3])
   }
   
-  return(Score)
+  N<-dim(rbind(Clutch,Choke,Null))[1]
+  
+  Ans<-list(Score,N)
+  
+  return(Ans)
 }
 ```
 
 Play Scoring function
 ```{r}
-playScore<-function(Dataset, W=c(1,-1,0)){
+PlayScore<-function(Dataset, W=c(1,-1,0)){
   Clutch<-filter(Dataset,Dataset$PointWinner=="P" & Dataset$Result %in% c("W","F"))
   Choke<-filter(Dataset,Dataset$PointWinner=="O" & Dataset$Result == "U")
   Null<-rbind(filter(Dataset,Dataset$PointWinner=="P" & Dataset$Result == "U"), filter(Dataset,Dataset$PointWinner=="O" & Dataset$Result %in% c("W","F")))
   #we can add in modifiers if we so desire here
   Score<-c(sum(Clutch$SituationalWeight)*W[1]+sum(Choke$SituationalWeight)*W[2]+sum(Null$SituationalWeight)*W[3])
-  return(Score)
+  
+  N<-dim(rbind(Clutch,Choke,Null))[1]
+  
+  Ans<-list(Score,N)
+  
+  return(Ans)
 }
 ```
 
 Serving + Play Clutch Score
 ```{r}
 ClutchScore<-function(Dataset){
-  Score<-playScore(Dataset)+ServingScore(Dataset)
-  return(Score)
+  Score<-PlayScore(Dataset)[[1]]+ServingScore(Dataset)[[1]]
+  N<-PlayScore(Dataset)[[2]]+ServingScore(Dataset)[[2]]
+  Ans<-list(Score,N)
+  return(Ans)
 }
 ```
 
@@ -215,11 +230,20 @@ Low Pressure Column (No game points of any kind)
 ```{r}
 LPcolumn<-function(Dataset){
   LPData<-LowPressure(Dataset)
-  LPServingScore<-ServingScore(LPData)
-  LPplayScore<-playScore(LPData)
-  LPClutchScore<-ClutchScore(LPData)
-  LPcolumn<-c(LPServingScore,LPplayScore,LPClutchScore)
-  return(LPcolumn)
+  
+  LPServingScore<-ServingScore(LPData)[[1]]
+  LPPlayScore<-PlayScore(LPData)[[1]]
+  LPClutchScore<-ClutchScore(LPData)[[1]]
+  LPColumn<-c(LPServingScore,LPPlayScore,LPClutchScore)
+  
+  LPServingN<-ServingScore(LPData)[[2]]
+  LPPlayN<-PlayScore(LPData)[[2]]
+  LPClutchN<-ClutchScore(LPData)[[2]]
+  LPN<-c(LPServingN,LPPlayN,LPClutchN)
+  
+  Ans<-list(LPColumn,LPN)
+  
+  return(Ans)
 }
 ```
 
@@ -234,10 +258,12 @@ BYUHoldColumn<-function(Dataset){
     Dataset[(Dataset$PlayerPoints == 3 & Dataset$OppPoints == 1) & Dataset$Server== "P",],
     Dataset[(Dataset$PlayerPoints == 3 & Dataset$OppPoints == 0) & Dataset$Server== "P",])
   BYUHoldServingScore<-ServingScore(BYUHolddf)
-  BYUHoldplayScore<-playScore(BYUHolddf)
+  BYUHoldPlayScore<-PlayScore(BYUHolddf)
   BYUHoldClutchScore<-ClutchScore(BYUHolddf)
-  BYUHoldScores<-c(BYUHoldServingScore,BYUHoldplayScore,BYUHoldClutchScore)
-  return(BYUHoldScores)
+  BYUHoldScores<-c(BYUHoldServingScore[[1]],BYUHoldPlayScore[[1]],BYUHoldClutchScore[[1]])
+  N<-c(BYUHoldServingScore[[2]],BYUHoldPlayScore[[2]],BYUHoldClutchScore[[2]])
+  Ans<-list(BYUHoldScores,N)
+  return(Ans)
 }
 ```
 
@@ -251,10 +277,12 @@ BYUBreakColumn<-function(Dataset){
     Dataset[(Dataset$PlayerPoints == 1 & Dataset$OppPoints == 3) & Dataset$Server== "P",],
     Dataset[(Dataset$PlayerPoints == 0 & Dataset$OppPoints == 3) & Dataset$Server== "P",])
   BYUBreakServingScore<-ServingScore(BYUBreakdf)
-  BYUBreakplayScore<-playScore(BYUBreakdf)
+  BYUBreakPlayScore<-PlayScore(BYUBreakdf)
   BYUBreakClutchScore<-ClutchScore(BYUBreakdf)
-  BYUBreakScores<-c(BYUBreakServingScore,BYUBreakplayScore,BYUBreakClutchScore)
-  return(BYUBreakScores)
+  BYUBreakScores<-c(BYUBreakServingScore[[1]],BYUBreakPlayScore[[1]],BYUBreakClutchScore[[1]])
+  N<-c(BYUBreakServingScore[[2]],BYUBreakPlayScore[[2]],BYUBreakClutchScore[[2]])
+  Ans<-list(BYUBreakScores,N)
+  return(Ans)
 }
 ```
 
@@ -267,10 +295,12 @@ OppHoldColumn<-function(Dataset){
     Dataset[(Dataset$PlayerPoints == 2 & Dataset$OppPoints == 3) & Dataset$Server== "O",],
     Dataset[(Dataset$PlayerPoints == 1 & Dataset$OppPoints == 3) & Dataset$Server== "O",],
     Dataset[(Dataset$PlayerPoints == 0 & Dataset$OppPoints == 3) & Dataset$Server== "O",])
-  OppHoldplayScore<-playScore(OppHolddf)
+  OppHoldPlayScore<-PlayScore(OppHolddf)
   OppHoldClutchScore<-ClutchScore(OppHolddf)
-  OppHoldScores<-c(OppHoldplayScore,OppHoldClutchScore)
-  return(OppHoldScores)
+  OppHoldScores<-c(OppHoldPlayScore[[1]],OppHoldClutchScore[[1]])
+  N<-c(OppHoldPlayScore[[2]],OppHoldClutchScore[[2]])
+  Ans<-list(OppHoldScores,N)
+  return(Ans)
 }
 ```
 
@@ -283,10 +313,12 @@ OppBreakColumn<-function(Dataset){
     Dataset[(Dataset$PlayerPoints == 3 & Dataset$OppPoints == 2) & Dataset$Server== "O",],
     Dataset[(Dataset$PlayerPoints == 3 & Dataset$OppPoints == 1) & Dataset$Server== "O",],
     Dataset[(Dataset$PlayerPoints == 3 & Dataset$OppPoints == 0) & Dataset$Server== "O",])
-  OppBreakplayScore<-playScore(OppBreakdf)
+  OppBreakPlayScore<-PlayScore(OppBreakdf)
   OppBreakClutchScore<-ClutchScore(OppBreakdf)
-  OppBreakScores<-c(OppBreakplayScore,OppBreakClutchScore)
-  return(OppBreakScores)
+  OppBreakScores<-c(OppBreakPlayScore[[1]],OppBreakClutchScore[[1]])
+  N<-c(OppBreakPlayScore[[2]],OppBreakClutchScore[[2]])
+  Ans<-list(OppBreakScores,N)
+  return(Ans)
 }
 ```
 
@@ -294,10 +326,10 @@ Raw Combo makes the Raw combo column in the Clutch table. It should return a vec
 ```{r}
 Rawcombo<-function(Dataset){
   #read in the four pressure column situations
-  BYUHold<-BYUHoldColumn(Dataset)
-  BYUBreak<-BYUBreakColumn(Dataset)
-  OppHold<-OppHoldColumn(Dataset)
-  OppBreak<-OppBreakColumn(Dataset)
+  BYUHold<-BYUHoldColumn(Dataset)[[1]]
+  BYUBreak<-BYUBreakColumn(Dataset)[[1]]
+  OppHold<-OppHoldColumn(Dataset)[[1]]
+  OppBreak<-OppBreakColumn(Dataset)[[1]]
   
   #initialize and then fill in Rawcombocolumn
   Rawcombocolumn<-NULL
@@ -306,19 +338,29 @@ Rawcombo<-function(Dataset){
     Middle<-BYUHold[2]+BYUBreak[2]+OppHold[1]+OppBreak[1]
     Bottom<-BYUHold[3]+BYUBreak[3]+OppHold[2]+OppBreak[2]
   
-  Rawcombocolumn<-c(Top,Middle,Bottom)
-  return(Rawcombocolumn)
+  RawComboColumn<-c(Top,Middle,Bottom)
+  
+  NTop<-BYUHoldColumn(Dataset)[[2]][1]+BYUBreakColumn(Dataset)[[2]][1]
+  NMiddle<-BYUHoldColumn(Dataset)[[2]][2] + BYUBreakColumn(Dataset)[[2]][2] + OppHoldColumn(Dataset)[[2]][1] + OppBreakColumn(Dataset)[[2]][1]
+  NBottom<-BYUHoldColumn(Dataset)[[2]][3] + BYUBreakColumn(Dataset)[[2]][3] + OppHoldColumn(Dataset)[[2]][2] + OppBreakColumn(Dataset)[[2]][2]
+  
+  RawComboN<-c(NTop, NMiddle, NBottom)
+  
+  Ans<-list(RawComboColumn, RawComboN)
+  
+  return(Ans)
 }
 ```
 
 The Weighted combo function takes a Dataset and a weight vector of length 12 it can apply to each combination of OPP/BYU/Hold/Break being Clutch, Choke or neutral. It doesn't account for specific high-stress points, like a match points vs. a Hold point in the first set. 
 ```{r}
+#It's jacked up. This needs some fixing with list being put into serving and play scores
 wcombo<-function(Dataset,Weights=c(rep(1,times=12))){
   #read in the four pressure column situations
-  BYUHold<-BYUHoldColumn(Dataset)
-  BYUBreak<-BYUBreakColumn(Dataset)
-  OppHold<-OppHoldColumn(Dataset)
-  OppBreak<-OppBreakColumn(Dataset)
+  BYUHold<-BYUHoldColumn(Dataset)[[1]]
+  BYUBreak<-BYUBreakColumn(Dataset)[[1]]
+  OppHold<-OppHoldColumn(Dataset)[[1]]
+  OppBreak<-OppBreakColumn(Dataset)[[1]]
   
   #initialize and then fill in Rawcombocolumn
   WComboColumn<-NULL
@@ -353,16 +395,18 @@ FullMatrix<-function(Dataset){
   colnames(MATRIX)<-c("Low Pressure","BYU Hold", "BYU Break", "Opp Hold", "Opp Break", "Combo")
   
   #Make the LP matrix and do the non-Clutch column
-  LPDataset<-LowPressure(Dataset)
-  MATRIX[,1]<-c(ServingScore(LPDataset),playScore(LPDataset),ClutchScore(LPDataset))
+  LPDataset<-LPcolumn(Dataset)
+  MATRIX[,1]<-round(LPDataset[[1]]/LPDataset[[2]], digits = 3)
   
   #Then the next 4 columns
   HPDataset<-HighPressure(Dataset)
-  MATRIX[,2]<-BYUHoldColumn(HPDataset)
-  MATRIX[,3]<-BYUBreakColumn(HPDataset)
-  MATRIX[2:3,4]<-OppHoldColumn(HPDataset)
-  MATRIX[2:3,5]<-OppBreakColumn(HPDataset)
-  MATRIX[,6]<-Rawcombo(HPDataset)
+  MATRIX[,2]<-round(BYUHoldColumn(HPDataset)[[1]]/BYUHoldColumn(HPDataset)[[2]], digits = 3)
+  MATRIX[,3]<-round(BYUBreakColumn(HPDataset)[[1]]/BYUBreakColumn(HPDataset)[[2]], digits = 3)
+  MATRIX[2:3,4]<-round(OppHoldColumn(HPDataset)[[1]]/OppHoldColumn(HPDataset)[[2]], digits = 3)
+  MATRIX[2:3,5]<-round(OppBreakColumn(HPDataset)[[1]]/OppHoldColumn(HPDataset)[[2]], digits = 3)
+  MATRIX[,6]<-round(Rawcombo(HPDataset)[[1]]/Rawcombo(HPDataset)[[2]], digits = 3)
+  MATRIX[1,4:5]<-c(NA,NA)
+  MATRIX<-as.data.frame.matrix(MATRIX)
   return(MATRIX)
 }
 ```
@@ -385,6 +429,110 @@ FormatData<-function(RawData,DataType="OldSQL"){
 
 ```
 
+MaleBoot: THIS TAKES ALMOST 30 MINUTES WHEN SET TO THE FULL APPROPRIATE VALUE OF 1000 REPS
+```{r, evaluate=FALSE}
+MaleBoot<-function(Data,Reps=250){
+  BigBoot<-future_replicate(Reps, FullMatrix(FormatData(Data[sample(1:dim(Data)[1],size=100, replace=TRUE),])))
+}
+```
+
+FemaleBoot: THIS TAKES ALMOST 30 MINUTES WHEN SET TO THE FULL APPROPRIATE VALUE OF 1000 REPS
+```{r,evaluate=FALSE}
+FemaleBoot<-function(Data,Reps=250){
+  BigBoot<-future_replicate(Reps, FullMatrix(FormatData(Data[sample(1:dim(Data)[1],size=100, replace=TRUE),])))
+}
+```
+
+This function automatically updates the color scale values for either male or female data
+```{r, evaluate=FALSE}
+BaseColorVals<-function(Gender){
+  
+  #reads in the appropriate data for either males or females
+  if(Gender=="Female"){
+    AllData<-rbind(read.csv("Women's Player Data Files/MJones.csv"),
+               read.csv("Women's Player Data Files/AAbramyan.csv"),
+               read.csv("Women's Player Data Files/KCusick.csv"),
+               read.csv("Women's Player Data Files/PMalykh.csv"),
+               read.csv("Women's Player Data Files/SSmith.csv"))
+  }
+  
+  #Makes the Full table
+  FData<-FormatData(AllData)
+  TabData<-FullMatrix(FData)
+  FinTable<-gt(TabData, rownames_to_stub = TRUE)
+  
+  #THIS IS A MONSTER AND TAKES 6 MINUTES TO RUN AT 250 ITERATIONS, WHICH IS A QUARTER OF THE RECOMMENDED 1000. ONLY RUN ONCE AND DO NOT DELETE UNLESS NECESSARY
+  Reps<-25
+  ifelse(Gender=="Female",BOOTLICKINMONSTER<-FemaleBoot(AllData, Reps),BOOTLICKINMONSTER<-MaleBoot(AllData, Reps))
+  
+  #here we take the means and the SD's
+  LPBMean<-mean(unlist(BOOTLICKINMONSTER[1,c(1:Reps)]))
+  LPBSD<-sd(unlist(BOOTLICKINMONSTER[1,c(1:Reps)]))
+  BHBMean<-mean(unlist(BOOTLICKINMONSTER[2,c(1:Reps)]))
+  BHBSD<-sd(unlist(BOOTLICKINMONSTER[2,c(1:Reps)]))
+  BBBMean<-mean(unlist(BOOTLICKINMONSTER[3,c(1:Reps)]))
+  BBBSD<-sd(unlist(BOOTLICKINMONSTER[3,c(1:Reps)]))
+  OHBMean<-mean(unlist(BOOTLICKINMONSTER[4,c(1:Reps)])[c(3*(1:(Reps)),3*(1:(Reps))-1)])
+  OHBSD<-sd(unlist(BOOTLICKINMONSTER[4,c(1:Reps)]))
+  OBBMean<-mean(unlist(BOOTLICKINMONSTER[5,c(1:Reps)])[c(3*(1:(Reps)),3*(1:(Reps))-1)])
+  OBBSD<-sd(unlist(BOOTLICKINMONSTER[5,c(1:Reps)]))
+  CBMean<-mean(unlist(BOOTLICKINMONSTER[6,c(1:Reps)]))
+  CBSD<-sd(unlist(BOOTLICKINMONSTER[6,c(1:Reps)]))
+  
+  c(3*(1:(Reps)))
+  
+  #Assigning the values for our domains
+  LP<-c(LPBMean+c(-1,1)*LPBSD)
+  BH<-c(BHBMean+c(-1,1)*BHBSD)
+  BB<-c(BBBMean+c(-1,1)*BBBSD)
+  OH<-c(OHBMean+c(-1,1)*OHBSD)
+  OB<-c(OBBMean+c(-1,1)*OBBSD)
+  C<-c(CBMean+c(-1,1)*CBSD)
+  
+  ColorDomains<-list(LP, BH, BB, OH, OB, C)
+  return(ColorDomains)
+}
+```
+
+
+Here we'll create the table after inputting just the RawData
+```{r}
+TableMaker<-function(RawData){
+  FData<-FormatData(RawData)
+  TabData<-FullMatrix(FData)
+  
+  #Start the gt
+  FinTable<-gt(TabData, rownames_to_stub = TRUE)
+  
+  #add the header, with names varying on whether on not there's multiple people in the table to make
+  Names<-unique(RawData$PlayerID)
+  
+  if (length(Names)==1){
+    FinTable %>%
+      tab_header(
+    title = "Clutch Scoring Table",
+    subtitle = paste(Names, "data from", min(as.Date(RawData$Date)), "to", max(as.Date(RawData$Date))))
+  }
+  
+  #Assigning the values for our domains
+  LP<-c(-.2,.2)
+  BH<-c(-.5,1)
+  BB<-c(-.64,1)
+  OH<-c(-.5,.3)
+  OB<-c(-.5,.3)
+  C<-c(-1,1)
+
+  #Coloring the columns in order, using the values we chose earlier for highs and lows
+  FinTable<-data_color(FinTable,columns = "Low Pressure", colors = scales::col_numeric(palette = "RdYlGn", domain = LP))
+  FinTable<-data_color(FinTable,columns = "BYU Hold", colors = scales::col_numeric(palette = "RdYlGn", domain = BH))
+  FinTable<-data_color(FinTable,columns = "BYU Break", colors = scales::col_numeric(palette = "RdYlGn", domain = BB))
+  FinTable<-data_color(FinTable,columns = "Opp Hold", colors = scales::col_numeric(palette = "RdYlGn", domain = OH))
+  FinTable<-data_color(FinTable,columns = "Opp Break", colors = scales::col_numeric(palette = "RdYlGn", domain = OB))
+  FinTable<-data_color(FinTable,columns = "Combo", colors = scales::col_numeric(palette = "RdYlGn", domain = C))  
+      
+  return(FinTable)
+}
+```
 
 
 
@@ -392,19 +540,19 @@ FormatData<-function(RawData,DataType="OldSQL"){
 
 ~~~~~~~~~~~~~~~~~~~~Now's let's work with the Women's Data already collected~~~~~~~~~~~~~~~~~~~~~~
 All the Women's Data Together runs, as well as individual players' data
-```{r}
-WData<-read.csv("MJones.csv")
-WJoint<-FormatData(WData)
-(A<-FullMatrix(WJoint))
-```
 
 ```{r}
-TabA<-gt(A, rowname_col = c("Clutch Serving Score","Clutch Playing Score","Overall Clutch Score"),
-      rownames_to_stub = TRUE)
-TabA %>%
-  tab_header(
-    title = "Clutch Scoring Table",
-    subtitle = paste(unique(WData$PlayerID), "data from", min(as.Date(WData$Date)), "to", max(as.Date(WData$Date))))
+AllData<-rbind(read.csv("Women's Player Data Files/MJones.csv"),
+               read.csv("Women's Player Data Files/AAbramyan.csv"),
+               read.csv("Women's Player Data Files/KCusick.csv"),
+               read.csv("Women's Player Data Files/PMalykh.csv"),
+               read.csv("Women's Player Data Files/SSmith.csv"))
 
+
+(AllTable<-TableMaker(AllData))
+(MJones<-TableMaker(read.csv("Women's Player Data Files/MJones.csv")))
+(AAbramyan<-TableMaker(read.csv("Women's Player Data Files/AAbramyan.csv")))
+(KCusick<-TableMaker(read.csv("Women's Player Data Files/KCusick.csv")))
+(PMalykh<-TableMaker(read.csv("Women's Player Data Files/PMalykh.csv")))
+(SSmith<-TableMaker(read.csv("Women's Player Data Files/SSmith.csv")))
 ```
-
