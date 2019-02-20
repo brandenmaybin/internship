@@ -594,6 +594,7 @@ ServeTableMaker(AllData)
 RUNNING TO DO LIST:
 - Resolve the coloring issues
 - Bootstrap replacement values from out total sets. 
+- SET UP THE DATE SYSTEM ON THE FILES
 
 
 
