@@ -513,8 +513,7 @@ ClutchTableMaker<-function(RawData){
     FinTable <-
       tab_header(data = FinTable,
     title = "Clutch Scoring Table",
-    subtitle = paste(Names))
-    #subtitle = paste(Names, "data from", min(as.Date(RawData$Date,"%m/%d/%Y")), "to", max(as.Date(RawData$Date,"%m/%d/%Y")))
+    subtitle = paste(Names, "data from", min(as.Date(RawData$Date,"%m/%d/%Y")), "to", max(as.Date(RawData$Date,"%m/%d/%Y"))))
   }
   
   #Assigning the values for our domains
@@ -545,24 +544,38 @@ ClutchTableMaker<-function(RawData){
 All the Women's Data Together runs, as well as individual players' data
 
 ```{r}
-AllData<-rbind(read.csv("Women's Player Data Files/MJones.csv"),
-               read.csv("Women's Player Data Files/AAbramyan.csv"),
-               read.csv("Women's Player Data Files/KCusick.csv"),
-               read.csv("Women's Player Data Files/PMalykh.csv"),
-               read.csv("Women's Player Data Files/SSmith.csv"),
-               read.csv("Women's Player Data Files/HKaur.csv"))
+AllData<-rbind(read.csv("Women's Player Data Files/MJones18.csv"),
+               read.csv("Women's Player Data Files/AAbramyan18.csv"),
+               read.csv("Women's Player Data Files/KCusick18.csv"),
+               read.csv("Women's Player Data Files/PMalykh18.csv"),
+               read.csv("Women's Player Data Files/SSmith18.csv"),
+               read.csv("Women's Player Data Files/HKaur18.csv"))
 
 
 (AllTable<-ClutchTableMaker(AllData))
-(MJones<-ClutchTableMaker(read.csv("Women's Player Data Files/MJones.csv")))
-(AAbramyan<-ClutchTableMaker(read.csv("Women's Player Data Files/AAbramyan.csv")))
-(KCusick<-ClutchTableMaker(read.csv("Women's Player Data Files/KCusick.csv")))
-(PMalykh<-ClutchTableMaker(read.csv("Women's Player Data Files/PMalykh.csv")))
-(SSmith<-ClutchTableMaker(read.csv("Women's Player Data Files/SSmith.csv")))
-(HKaur<-ClutchTableMaker(read.csv("Women's Player Data Files/HKaur.csv")))
+(MJones<-ClutchTableMaker(read.csv("Women's Player Data Files/MJones18.csv")))
+(AAbramyan<-ClutchTableMaker(read.csv("Women's Player Data Files/AAbramyan18.csv")))
+(KCusick<-ClutchTableMaker(read.csv("Women's Player Data Files/KCusick18.csv")))
+(PMalykh<-ClutchTableMaker(read.csv("Women's Player Data Files/PMalykh18.csv")))
+(SSmith<-ClutchTableMaker(read.csv("Women's Player Data Files/SSmith18.csv")))
+(HKaur<-ClutchTableMaker(read.csv("Women's Player Data Files/HKaur18.csv")))
+```
+Playing with Bootstrapping
+```{r}
+AllClutch<-HighPressure(AllData)
+N<-dim(AllClutch)[1]
+n<-100
+
+for(i in 1:5){
+  RandyNum<-sample(1:N,n)
+  RandyPoints<-AllClutch[RandyNum,]
+  print(RandyT<-FullClutchMatrix(RandyPoints))
+}
 ```
 
+
 RUNNING TO DO LIST:
-- FIX MINOR COLORATION ISSUES
 - DO THE BOOTSTRAPPING TO EVALUATE EACH PLAYER'S PERFORMANCE
-- SET UP THE WHOLE DATE SYSTEM IN THE SUBTITLES
+    - Why are the opp columns returning 0.00 everytime? 
+- FIX MINOR COLORATION ISSUES
+    - GT needs to be coloring specific cells, not the columns. We also need to assume all the data is normally distributed, which isn't necessarily true. 
