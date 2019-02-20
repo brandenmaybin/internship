@@ -388,7 +388,7 @@ wcombo<-function(Dataset,Weights=c(rep(1,times=12))){
 
 fullanalysismatrix calls all our previous functions and turns them into a matrix that looks like our table we have under Clutch analysis
 ```{r}
-FullMatrix<-function(Dataset){
+FullClutchMatrix<-function(Dataset){
   #Format the Matrix
   MATRIX<-matrix(data=0,nrow=3,ncol = 6)
   rownames(MATRIX)<-c("Clutch Serving Score","Clutch Playing Score", "Overall Clutch Score")
@@ -497,9 +497,9 @@ BaseColorVals<-function(Gender){
 
 Here we'll create the table after inputting just the RawData
 ```{r}
-TableMaker<-function(RawData){
+ClutchTableMaker<-function(RawData){
   FData<-FormatData(RawData)
-  TabData<-FullMatrix(FData)
+  TabData<-FullClutchMatrix(FData)
   
   #Start the gt
   FinTable<-gt(TabData, rownames_to_stub = TRUE)
@@ -507,11 +507,14 @@ TableMaker<-function(RawData){
   #add the header, with names varying on whether on not there's multiple people in the table to make
   Names<-unique(RawData$PlayerID)
   
+  #for
+  
   if (length(Names)==1){
-    FinTable %>%
-      tab_header(
+    FinTable <-
+      tab_header(data = FinTable,
     title = "Clutch Scoring Table",
-    subtitle = paste(Names, "data from", min(as.Date(RawData$Date)), "to", max(as.Date(RawData$Date))))
+    subtitle = paste(Names))
+    #subtitle = paste(Names, "data from", min(as.Date(RawData$Date,"%m/%d/%Y")), "to", max(as.Date(RawData$Date,"%m/%d/%Y")))
   }
   
   #Assigning the values for our domains
@@ -524,11 +527,11 @@ TableMaker<-function(RawData){
 
   #Coloring the columns in order, using the values we chose earlier for highs and lows
   FinTable<-data_color(FinTable,columns = "Low Pressure", colors = scales::col_numeric(palette = "RdYlGn", domain = LP))
-  FinTable<-data_color(FinTable,columns = "BYU Hold", colors = scales::col_numeric(palette = "RdYlGn", domain = BH))
-  FinTable<-data_color(FinTable,columns = "BYU Break", colors = scales::col_numeric(palette = "RdYlGn", domain = BB))
-  FinTable<-data_color(FinTable,columns = "Opp Hold", colors = scales::col_numeric(palette = "RdYlGn", domain = OH))
-  FinTable<-data_color(FinTable,columns = "Opp Break", colors = scales::col_numeric(palette = "RdYlGn", domain = OB))
-  FinTable<-data_color(FinTable,columns = "Combo", colors = scales::col_numeric(palette = "RdYlGn", domain = C))  
+  #FinTable<-data_color(FinTable,columns = "BYU Hold", colors = scales::col_numeric(palette = "RdYlGn", domain = BH))
+  #FinTable<-data_color(FinTable,columns = "BYU Break", colors = scales::col_numeric(palette = "RdYlGn", domain = BB))
+  #FinTable<-data_color(FinTable,columns = "Opp Hold", colors = scales::col_numeric(palette = "RdYlGn", domain = OH))
+  #FinTable<-data_color(FinTable,columns = "Opp Break", colors = scales::col_numeric(palette = "RdYlGn", domain = OB))
+  #FinTable<-data_color(FinTable,columns = "Combo", colors = scales::col_numeric(palette = "RdYlGn", domain = C))  
       
   return(FinTable)
 }
@@ -546,13 +549,19 @@ AllData<-rbind(read.csv("Women's Player Data Files/MJones.csv"),
                read.csv("Women's Player Data Files/AAbramyan.csv"),
                read.csv("Women's Player Data Files/KCusick.csv"),
                read.csv("Women's Player Data Files/PMalykh.csv"),
-               read.csv("Women's Player Data Files/SSmith.csv"))
+               read.csv("Women's Player Data Files/SSmith.csv"),
+               read.csv("Women's Player Data Files/HKaur.csv"))
 
 
-(AllTable<-TableMaker(AllData))
-(MJones<-TableMaker(read.csv("Women's Player Data Files/MJones.csv")))
-(AAbramyan<-TableMaker(read.csv("Women's Player Data Files/AAbramyan.csv")))
-(KCusick<-TableMaker(read.csv("Women's Player Data Files/KCusick.csv")))
-(PMalykh<-TableMaker(read.csv("Women's Player Data Files/PMalykh.csv")))
-(SSmith<-TableMaker(read.csv("Women's Player Data Files/SSmith.csv")))
+(AllTable<-ClutchTableMaker(AllData))
+(MJones<-ClutchTableMaker(read.csv("Women's Player Data Files/MJones.csv")))
+(AAbramyan<-ClutchTableMaker(read.csv("Women's Player Data Files/AAbramyan.csv")))
+(KCusick<-ClutchTableMaker(read.csv("Women's Player Data Files/KCusick.csv")))
+(PMalykh<-ClutchTableMaker(read.csv("Women's Player Data Files/PMalykh.csv")))
+(SSmith<-ClutchTableMaker(read.csv("Women's Player Data Files/SSmith.csv")))
+(HKaur<-ClutchTableMaker(read.csv("Women's Player Data Files/HKaur.csv")))
 ```
+
+RUNNING TO DO LIST:
+- FIX MINOR COLORATION ISSUES
+- DO THE BOOTSTRAPPING TO EVALUATE EACH PLAYER'S PERFORMANCE

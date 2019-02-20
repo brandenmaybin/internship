@@ -488,7 +488,7 @@ AppliedScoring<-function(Deuce, Ad, Joint, W=c(1,-1,0) ){
 }
 ```
 
-FormatData: Does all the formating we need before throwing it in FullMatrix
+FormatData: Does all the formating we need before throwing it in FullServeMatrix
 NewExcel doesn't sort by Player ID
 OldSQL includes player ID but doesn't sort by it, sino just puts it all together and leaves a new variable called PlayerID
 ```{r}
@@ -510,7 +510,7 @@ FormatData<-function(RawData,DataType="OldSQL"){
 Prepare the full matrix before we throw it into a table
 NOTE: This doesn't run with player ID included
 ```{r}
-FullMatrix<-function(DataSet,DataType="OldSQL"){
+FullServeMatrix<-function(DataSet,DataType="OldSQL"){
   #Format the Matrix
   MATRIX<-matrix(data=0,nrow=10,ncol = 9)
   rownames(MATRIX)<-c("Distribution", "First Serve Distribution", "Second Serve Distribution", "Double Fault %", "Def Pressure %", "Atk Pressure %", "Ace Distribution", "Ace Probability", "Short Game Win %", "Weighted Clutch Serving Score")
@@ -536,34 +536,65 @@ FullMatrix<-function(DataSet,DataType="OldSQL"){
   MATRIX[9,]<-ShortGameWinPerc(Deuce,Ad,Joint)
   MATRIX[10,]<-AppliedScoring(Deuce,Ad,Joint)
   
+  colnames(MATRIX)<-c("DWide", "DBody", "DT", "AT", "ABody", "AWide", "CT", "CBody", "CWide")
+  
   return(MATRIX)
+}
+```
+
+```{r}
+ServeTableMaker<-function(RawData){
+  FData<-FormatData(RawData)
+  TabData<-FullServeMatrix(FData)
+  
+  #Start the gt
+  FinTable<-gt(TabData, rownames_to_stub = TRUE)
+  
+  #add the header, with names varying on whether on not there's multiple people in the table to make
+  Names<-unique(RawData$PlayerID)
+  
+  if (length(Names)==1){
+    FinTable <-
+      tab_header(data = FinTable,
+    title = "Serving Table",
+    subtitle = paste(Names, "data from", min(as.Date(RawData$Date)), "to", max(as.Date(RawData$Date))))
+  }
+  else{
+    FinTable<-tab_header(data = FinTable, title = "Mass Serving Table")
+  }
+
+  Even<-c(0,30)
+
+  #Coloring the columns in order, using the values we chose earlier for highs and lows
+  
+    #Assigning the values for our domains
+  ZeroToOne<-c(0,1)
+
+  #Coloring the columns in order, using the values we chose earlier for highs and lows
+  #FinTable<-data_color(FinTable,columns = "DWide", colors = scales::col_numeric(palette = "RdYlGn", domain = ZeroToOne))
+      
+  return(FinTable)
 }
 ```
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Here's our workspace after all the Functions~~~~~~~~~~~~~~~~~~~~~~~~
 
-Test Example using the data we have from the 2 intramural test cases with the 2-shot model 
 ```{r}
-Ethan<-read.csv("Ethan Test.csv")[1:71,]
-Paul<-read.csv("Paul Test.csv")[1:81,]
-TestIntramurals<-rbind(Ethan,Paul)
-#this cuts out our former issue by removing the PlayerID column. Remember that FullMatrix only runs with that PlayerID precluded.
+AllData<-rbind(read.csv("Women's Player Data Files/MJones.csv"),
+               read.csv("Women's Player Data Files/AAbramyan.csv"),
+               read.csv("Women's Player Data Files/KCusick.csv"),
+               read.csv("Women's Player Data Files/PMalykh.csv"),
+               read.csv("Women's Player Data Files/SSmith.csv"))
 
-TestFormat<-FormatData(TestIntramurals,DataType = "NewExcel")
 
-FullMatrix(TestFormat)
+
+ServeTableMaker(AllData)
 ```
 
-Here's Parker's Data.
-```{r}
-WRaw<-read.csv("MJones.csv")
-#this cuts out our former issue by removing the PlayerID column. Remember that FullMatrix only runs with that PlayerID precluded.
+RUNNING TO DO LIST:
+- Resolve the coloring issues
+- Bootstrap replacement values from out total sets. 
 
-WRaw<-FormatData(WRaw)
-
-FullMatrix(WRaw)
-dim(WRaw)
-```
 
 
 
