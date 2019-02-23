@@ -526,11 +526,11 @@ ClutchTableMaker<-function(RawData){
 
   #Coloring the columns in order, using the values we chose earlier for highs and lows
   FinTable<-data_color(FinTable,columns = "Low Pressure", colors = scales::col_numeric(palette = "RdYlGn", domain = LP))
-  #FinTable<-data_color(FinTable,columns = "BYU Hold", colors = scales::col_numeric(palette = "RdYlGn", domain = BH))
-  #FinTable<-data_color(FinTable,columns = "BYU Break", colors = scales::col_numeric(palette = "RdYlGn", domain = BB))
-  #FinTable<-data_color(FinTable,columns = "Opp Hold", colors = scales::col_numeric(palette = "RdYlGn", domain = OH))
-  #FinTable<-data_color(FinTable,columns = "Opp Break", colors = scales::col_numeric(palette = "RdYlGn", domain = OB))
-  #FinTable<-data_color(FinTable,columns = "Combo", colors = scales::col_numeric(palette = "RdYlGn", domain = C))  
+  FinTable<-data_color(FinTable,columns = "BYU Hold", colors = scales::col_numeric(palette = "RdYlGn", domain = BH))
+  FinTable<-data_color(FinTable,columns = "BYU Break", colors = scales::col_numeric(palette = "RdYlGn", domain = BB))
+  FinTable<-data_color(FinTable,columns = "Opp Hold", colors = scales::col_numeric(palette = "RdYlGn", domain = OH))
+  FinTable<-data_color(FinTable,columns = "Opp Break", colors = scales::col_numeric(palette = "RdYlGn", domain = OB))
+  FinTable<-data_color(FinTable,columns = "Combo", colors = scales::col_numeric(palette = "RdYlGn", domain = C))  
       
   return(FinTable)
 }

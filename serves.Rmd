@@ -580,11 +580,11 @@ ServeTableMaker<-function(RawData){
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Here's our workspace after all the Functions~~~~~~~~~~~~~~~~~~~~~~~~
 
 ```{r}
-AllData<-rbind(read.csv("Women's Player Data Files/MJones.csv"),
-               read.csv("Women's Player Data Files/AAbramyan.csv"),
-               read.csv("Women's Player Data Files/KCusick.csv"),
-               read.csv("Women's Player Data Files/PMalykh.csv"),
-               read.csv("Women's Player Data Files/SSmith.csv"))
+AllData<-rbind(read.csv("Women's Player Data Files/MJones18.csv"),
+               read.csv("Women's Player Data Files/AAbramyan18.csv"),
+               read.csv("Women's Player Data Files/KCusick18.csv"),
+               read.csv("Women's Player Data Files/PMalykh18.csv"),
+               read.csv("Women's Player Data Files/SSmith18.csv"))
 
 
 
