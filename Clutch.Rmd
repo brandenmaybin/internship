@@ -182,13 +182,8 @@ ServingScore<-function(Dataset, W=c(1,-1,0)){
   Clutch<-rbind(filter(Dataset,Dataset$PointWinner=="P" & Dataset$PointLength=="S" & Dataset$Result %in% c("W","F") & Dataset$Server=="P"), filter(Dataset, Dataset$Result=="A" & Dataset$Server=="P"))
   Choke<-rbind(filter(Dataset,Dataset$PointWinner=="O" & Dataset$PointLength=="S" & Dataset$Result %in% c("W","F") & Dataset$Server=="P"), filter(Dataset, Dataset$Result=="D" & Dataset$Server=="P"))
   Null<-rbind(filter(Dataset, Dataset$ServeResult %in% c("F","S") & Dataset$PointLength %in% c("M","L") & Dataset$Server=="P"))
-  #we add an if here to catch when we run the LPcolum through serving, since the situational Weights of low pressure situations are 0. Here, if we find all the values are 0 we just use the dimensions in the calculation
-  if(sum(Clutch$SituationalWeight)+sum(Choke$SituationalWeight)+sum(Null$SituationalWeight) == 0){
-    Score<-dim(Clutch)[1]*W[1]+dim(Choke)[1]*W[2]+dim(Null)[1]*W[3]
-  }
-  else{
+
     Score<-c(sum(Clutch$SituationalWeight)*W[1]+sum(Choke$SituationalWeight)*W[2]+sum(Null$SituationalWeight)*W[3])
-  }
   
   N<-dim(rbind(Clutch,Choke,Null))[1]
   
@@ -396,15 +391,15 @@ FullClutchMatrix<-function(Dataset){
   
   #Make the LP matrix and do the non-Clutch column
   LPDataset<-LPcolumn(Dataset)
-  MATRIX[,1]<-round(LPDataset[[1]]/LPDataset[[2]], digits = 3)
+  MATRIX[,1]<-round(LPDataset[[1]]/LPDataset[[2]], digits = 7)
   
   #Then the next 4 columns
   HPDataset<-HighPressure(Dataset)
-  MATRIX[,2]<-round(BYUHoldColumn(HPDataset)[[1]]/BYUHoldColumn(HPDataset)[[2]], digits = 3)
-  MATRIX[,3]<-round(BYUBreakColumn(HPDataset)[[1]]/BYUBreakColumn(HPDataset)[[2]], digits = 3)
-  MATRIX[2:3,4]<-round(OppHoldColumn(HPDataset)[[1]]/OppHoldColumn(HPDataset)[[2]], digits = 3)
-  MATRIX[2:3,5]<-round(OppBreakColumn(HPDataset)[[1]]/OppHoldColumn(HPDataset)[[2]], digits = 3)
-  MATRIX[,6]<-round(Rawcombo(HPDataset)[[1]]/Rawcombo(HPDataset)[[2]], digits = 3)
+  MATRIX[,2]<-round(BYUHoldColumn(HPDataset)[[1]]/BYUHoldColumn(HPDataset)[[2]], digits = 7)
+  MATRIX[,3]<-round(BYUBreakColumn(HPDataset)[[1]]/BYUBreakColumn(HPDataset)[[2]], digits = 7)
+  MATRIX[2:3,4]<-round(OppHoldColumn(HPDataset)[[1]]/OppHoldColumn(HPDataset)[[2]], digits = 7)
+  MATRIX[2:3,5]<-round(OppBreakColumn(HPDataset)[[1]]/OppHoldColumn(HPDataset)[[2]], digits = 7)
+  MATRIX[,6]<-round(Rawcombo(HPDataset)[[1]]/Rawcombo(HPDataset)[[2]], digits = 7)
   MATRIX[1,4:5]<-c(NA,NA)
   MATRIX<-as.data.frame.matrix(MATRIX)
   return(MATRIX)
@@ -427,71 +422,6 @@ FormatData<-function(RawData,DataType="OldSQL"){
   return(JointData)
 }
 
-```
-
-MaleBoot: THIS TAKES ALMOST 30 MINUTES WHEN SET TO THE FULL APPROPRIATE VALUE OF 1000 REPS
-```{r, evaluate=FALSE}
-MaleBoot<-function(Data,Reps=250){
-  BigBoot<-future_replicate(Reps, FullMatrix(FormatData(Data[sample(1:dim(Data)[1],size=100, replace=TRUE),])))
-}
-```
-
-FemaleBoot: THIS TAKES ALMOST 30 MINUTES WHEN SET TO THE FULL APPROPRIATE VALUE OF 1000 REPS
-```{r,evaluate=FALSE}
-FemaleBoot<-function(Data,Reps=250){
-  BigBoot<-future_replicate(Reps, FullMatrix(FormatData(Data[sample(1:dim(Data)[1],size=100, replace=TRUE),])))
-}
-```
-
-This function automatically updates the color scale values for either male or female data
-```{r, evaluate=FALSE}
-BaseColorVals<-function(Gender){
-  
-  #reads in the appropriate data for either males or females
-  if(Gender=="Female"){
-    AllData<-rbind(read.csv("Women's Player Data Files/MJones.csv"),
-               read.csv("Women's Player Data Files/AAbramyan.csv"),
-               read.csv("Women's Player Data Files/KCusick.csv"),
-               read.csv("Women's Player Data Files/PMalykh.csv"),
-               read.csv("Women's Player Data Files/SSmith.csv"))
-  }
-  
-  #Makes the Full table
-  FData<-FormatData(AllData)
-  TabData<-FullMatrix(FData)
-  FinTable<-gt(TabData, rownames_to_stub = TRUE)
-  
-  #THIS IS A MONSTER AND TAKES 6 MINUTES TO RUN AT 250 ITERATIONS, WHICH IS A QUARTER OF THE RECOMMENDED 1000. ONLY RUN ONCE AND DO NOT DELETE UNLESS NECESSARY
-  Reps<-25
-  ifelse(Gender=="Female",BOOTLICKINMONSTER<-FemaleBoot(AllData, Reps),BOOTLICKINMONSTER<-MaleBoot(AllData, Reps))
-  
-  #here we take the means and the SD's
-  LPBMean<-mean(unlist(BOOTLICKINMONSTER[1,c(1:Reps)]))
-  LPBSD<-sd(unlist(BOOTLICKINMONSTER[1,c(1:Reps)]))
-  BHBMean<-mean(unlist(BOOTLICKINMONSTER[2,c(1:Reps)]))
-  BHBSD<-sd(unlist(BOOTLICKINMONSTER[2,c(1:Reps)]))
-  BBBMean<-mean(unlist(BOOTLICKINMONSTER[3,c(1:Reps)]))
-  BBBSD<-sd(unlist(BOOTLICKINMONSTER[3,c(1:Reps)]))
-  OHBMean<-mean(unlist(BOOTLICKINMONSTER[4,c(1:Reps)])[c(3*(1:(Reps)),3*(1:(Reps))-1)])
-  OHBSD<-sd(unlist(BOOTLICKINMONSTER[4,c(1:Reps)]))
-  OBBMean<-mean(unlist(BOOTLICKINMONSTER[5,c(1:Reps)])[c(3*(1:(Reps)),3*(1:(Reps))-1)])
-  OBBSD<-sd(unlist(BOOTLICKINMONSTER[5,c(1:Reps)]))
-  CBMean<-mean(unlist(BOOTLICKINMONSTER[6,c(1:Reps)]))
-  CBSD<-sd(unlist(BOOTLICKINMONSTER[6,c(1:Reps)]))
-  
-  c(3*(1:(Reps)))
-  
-  #Assigning the values for our domains
-  LP<-c(LPBMean+c(-1,1)*LPBSD)
-  BH<-c(BHBMean+c(-1,1)*BHBSD)
-  BB<-c(BBBMean+c(-1,1)*BBBSD)
-  OH<-c(OHBMean+c(-1,1)*OHBSD)
-  OB<-c(OBBMean+c(-1,1)*OBBSD)
-  C<-c(CBMean+c(-1,1)*CBSD)
-  
-  ColorDomains<-list(LP, BH, BB, OH, OB, C)
-  return(ColorDomains)
-}
 ```
 
 
@@ -562,16 +492,138 @@ AllData<-rbind(read.csv("Women's Player Data Files/MJones18.csv"),
 ```
 Playing with Bootstrapping
 ```{r}
-AllClutch<-HighPressure(AllData)
-N<-dim(AllClutch)[1]
-n<-100
+BootStrapSim<-function(AllData, PlayerData, Reps){
+  N<-dim(AllData)[1]
+  n<-dim(PlayerData)[1]
+  LPSV<-vector()
+  LPPV<-vector()
+  LPCV<-vector()
+  BHSV<-vector()
+  BHPV<-vector()
+  BHCV<-vector()
+  BBSV<-vector()
+  BBPV<-vector()
+  BBCV<-vector()
+  OHSV<-vector()
+  OHPV<-vector()
+  OHCV<-vector()
+  OBSV<-vector()
+  OBPV<-vector()
+  OBCV<-vector()
+  CSV<-vector()
+  CPV<-vector()
+  CCV<-vector()
 
-for(i in 1:5){
-  RandyNum<-sample(1:N,n)
-  RandyPoints<-AllClutch[RandyNum,]
-  print(RandyT<-FullClutchMatrix(RandyPoints))
-}
+  for(i in 1:Reps){
+    #Build randomized matrix
+    RandyNum<-sample(1:N,n)
+    Dataset<-AllData[RandyNum,]
+    FDataset<-FormatData(Dataset)
+    RandyResult<-FullClutchMatrix(FDataset)
+    LPSV[i]<-RandyResult$`Low Pressure`[1]
+    LPPV[i]<-RandyResult$`Low Pressure`[2]
+    LPCV[i]<-RandyResult$`Low Pressure`[3]
+    BHSV[i]<-RandyResult$`BYU Hold`[1]
+    BHPV[i]<-RandyResult$`BYU Hold`[2]
+    BHCV[i]<-RandyResult$`BYU Hold`[3]
+    BBSV[i]<-RandyResult$`BYU Break`[1]
+    BBPV[i]<-RandyResult$`BYU Break`[2]
+    BBCV[i]<-RandyResult$`BYU Break`[3]
+    OHSV[i]<-RandyResult$`Opp Hold`[1]
+    OHPV[i]<-RandyResult$`Opp Hold`[2]
+    OHCV[i]<-RandyResult$`Opp Hold`[3]
+    OBSV[i]<-RandyResult$`Opp Break`[1]
+    OBPV[i]<-RandyResult$`Opp Break`[2]
+    OBCV[i]<-RandyResult$`Opp Break`[3]
+    CSV[i]<-RandyResult$Combo[1]
+    CPV[i]<-RandyResult$Combo[2]
+    CCV[i]<-RandyResult$Combo[3]
+  }
+  
+  PlayerMatrix<-FullClutchMatrix(FormatData(PlayerData))
+    PLPSV<-PlayerMatrix$`Low Pressure`[1]
+    PLPPV<-PlayerMatrix$`Low Pressure`[2]
+    PLPCV<-PlayerMatrix$`Low Pressure`[3]
+    PBHSV<-PlayerMatrix$`BYU Hold`[1]
+    PBHPV<-PlayerMatrix$`BYU Hold`[2]
+    PBHCV<-PlayerMatrix$`BYU Hold`[3]
+    PBBSV<-PlayerMatrix$`BYU Break`[1]
+    PBBPV<-PlayerMatrix$`BYU Break`[2]
+    PBBCV<-PlayerMatrix$`BYU Break`[3]
+    POHSV<-PlayerMatrix$`Opp Hold`[1]
+    POHPV<-PlayerMatrix$`Opp Hold`[2]
+    POHCV<-PlayerMatrix$`Opp Hold`[3]
+    POBSV<-PlayerMatrix$`Opp Break`[1]
+    POBPV<-PlayerMatrix$`Opp Break`[2]
+    POBCV<-PlayerMatrix$`Opp Break`[3]
+    PCSV<-PlayerMatrix$Combo[1]
+    PCPV<-PlayerMatrix$Combo[2]
+    PCCV<-PlayerMatrix$Combo[3]
+  
+  BootLPSV<-sum(LPSV<PLPSV)/Reps  
+  BootLPPV<-sum(LPPV<PLPPV)/Reps 
+  BootLPCV<-sum(LPCV<PLPCV)/Reps 
+  BootBHSV<-sum(BHSV<PBHSV)/Reps 
+  BootBHPV<-sum(BHPV<PBHPV)/Reps 
+  BootBHCV<-sum(BHCV<PBHCV)/Reps 
+  BootBBSV<-sum(BBSV<PBBSV)/Reps   
+  BootBBPV<-sum(BBPV<PBBPV)/Reps 
+  BootBBCV<-sum(BBCV<PBBCV)/Reps 
+  BootOHSV<-sum(OHSV<POHSV)/Reps   
+  BootOHPV<-sum(OHPV<POHPV)/Reps 
+  BootOHCV<-sum(OHCV<POHCV)/Reps 
+  BootOBSV<-sum(OBSV<POBSV)/Reps   
+  BootOBPV<-sum(OBPV<POBPV)/Reps 
+  BootOBCV<-sum(OBCV<POBCV)/Reps 
+  BootCSV<-sum(CSV<PCSV)/Reps   
+  BootCPV<-sum(CPV<PCPV)/Reps 
+  BootCCV<-sum(CCV<PCCV)/Reps 
+  
+  BootMatrix<-cbind(as.numeric(c(BootLPSV, BootLPPV, BootLPCV)),
+                    as.numeric(c(BootBHSV, BootBHPV, BootBHCV)),
+                    as.numeric(c(BootBBSV, BootBBPV, BootBBCV)),
+                    as.numeric(c("NA", BootOHPV, BootOHCV)),
+                    as.numeric(c("NA", BootOBPV, BootOBCV)),
+                    as.numeric(c(BootCSV, BootCPV, BootCCV)))
+  colnames(BootMatrix)<-c("Low Pressure","BYU Hold","BYU Break","Opp Hold","Opp Break","Combo")
+  rownames(BootMatrix)<-c("Clutch Serving Score", "Clutch Playing Score", "Combined Clutch Score")
+  
+
+  #Start the gt
+  BootGT<-gt(as.data.frame( BootMatrix), rownames_to_stub = TRUE)
+  
+  #add the header, with names varying on whether on not there's multiple people in the table to make
+  Names<-unique(PlayerData$PlayerID)
+  
+  #for
+  
+  if (length(Names)==1){
+    BootGT <-
+      tab_header(data = BootGT,
+    title = "Clutch Scoring Table",
+    subtitle = paste(Names, "data from", min(as.Date(PlayerData$Date,"%m/%d/%Y")), "to", max(as.Date(PlayerData$Date,"%m/%d/%Y"))))
+  }
+  
+  #Assigning the values for our domains
+  BaseCol<-c(0,1)
+
+  #Coloring the columns in order, using the values we chose earlier for highs and lows
+  (BootGT<-data_color(BootGT,columns = c("Combo", "Low Pressure", "BYU Hold", "BYU Break", "Opp Hold", "Opp Break"), colors = scales::col_numeric(palette = "RdYlGn", domain = BaseCol))) 
+  
+  return(BootGT)
+  }
 ```
+
+```{r}
+HK18<-BootStrapSim(AllData,read.csv("Women's Player Data Files/HKaur18.csv"),100)
+SS18<-BootStrapSim(AllData,read.csv("Women's Player Data Files/SSmith18.csv"),100)
+AA18<-BootStrapSim(AllData,read.csv("Women's Player Data Files/AAbramyan18.csv"),100)
+PM18<-BootStrapSim(AllData,read.csv("Women's Player Data Files/PMalykh18.csv"),100)
+KC18<-BootStrapSim(AllData,read.csv("Women's Player Data Files/KCusick18.csv"),100)
+
+HK18
+```
+
 
 
 RUNNING TO DO LIST:

@@ -20,6 +20,8 @@ For the formatting of the tables:
 library(alr3)
 library(MASS)
 library(dplyr)
+library(gtable)
+require(gt)
 ```
 
 ###################  And the Functions begin  #############################
@@ -81,8 +83,7 @@ return(DAJlist)
 
 Court Distribution Calculator Function that creates the First row of the table
 ```{r}
-CourtDistFunc<-function(Deuce,Ad,Joint)
-{
+CourtDistFunc<-function(Deuce,Ad,Joint){
   NDFDeuce<-sum(Deuce$ServeResult=="D")
   NDeuce<-dim(Deuce)[1]-NDFDeuce
   DW<-sum(Deuce$ServeLocation=="W")/NDeuce
@@ -109,8 +110,7 @@ CourtDistFunc<-function(Deuce,Ad,Joint)
 
 AcePercFunc gives us the percentages of shots to a given area that result in aces
 ```{r}
-AcePercFunc<-function(Deuce,Ad,Joint)
-{
+AcePercFunc<-function(Deuce,Ad,Joint){
     
   AJoint<-filter(Joint,Joint$ServeLocation%in%c("W", "B", "C", "L", "T"))
   NJoint<-dim(AJoint)[1]
@@ -141,8 +141,7 @@ AcePercFunc<-function(Deuce,Ad,Joint)
 Ace Distribution Function
 There's still an issue about how we select DW, DB and DL as 0. We need to make those 0 whenever Njoint euqals zero, otherwise we'll get an divide by zero error in that case. 
 ```{r}
-AceDistFunc<-function(Deuce,Ad,Joint)
-{
+AceDistFunc<-function(Deuce,Ad,Joint){
   AJoint<-filter(Joint,Joint$Result=="A" & Joint$ServeLocation%in%c("W", "B", "C", "L", "T"))
   NJoint<-dim(AJoint)[1]
   
@@ -188,8 +187,7 @@ AceDistFunc<-function(Deuce,Ad,Joint)
 
 Short Game Win Percentage Calculator
 ```{r}
-ShortGameWinPerc<-function(Deuce,Ad,Joint)
-{
+ShortGameWinPerc<-function(Deuce,Ad,Joint){
   
   SDeuce<-filter(Deuce,Deuce$PointLength=="S")
   SWinDeuce<-filter(SDeuce,SDeuce$PointWinner=="P")
@@ -220,8 +218,7 @@ ShortGameWinPerc<-function(Deuce,Ad,Joint)
 
 First Serve Placement Calculator
 ```{r}
-FirstCourtDist<-function(Deuce,Ad,Joint)
-{
+FirstCourtDist<-function(Deuce,Ad,Joint){
   FDeuce<-filter(Deuce,Deuce$ServeResult=="F")
   NFDeuce<-dim(FDeuce)[1]
   DW<-sum(FDeuce$ServeLocation=="W")/NFDeuce
@@ -248,8 +245,7 @@ FirstCourtDist<-function(Deuce,Ad,Joint)
 
 Second Serve Placement Calculator
 ```{r}
-SecondCourtDist<-function(Deuce,Ad,Joint)
-{
+SecondCourtDist<-function(Deuce,Ad,Joint){
   SDeuce<-filter(Deuce,Deuce$ServeResult=="S")
   NSDeuce<-dim(SDeuce)[1]
   DW<-sum(SDeuce$ServeLocation=="W")/NSDeuce
@@ -342,8 +338,7 @@ AtkPressureDistribution<-function(Deuce, Ad, Joint,FSWeights=c(1,1)){
 
 Double Fault Percentage Calculator
 ```{r}
-DFPerc<-function(Deuce,Ad,Joint)
-{
+DFPerc<-function(Deuce,Ad,Joint){
   NDFDeuce<-sum(Deuce$ServeResult=="D")
   NDeuce<-dim(Deuce)[1]
   DFD<-NDFDeuce/NDeuce
@@ -456,16 +451,11 @@ SituationalWeights<-function(Data){
 Serving Scoring Function
 ```{r}
 ServingSore<-function(DataSet, W=c(1,-1,0)){
-  Clutch<-rbind(filter(DataSet,DataSet$PointWinner=="P" & DataSet$PointLength=="S" & DataSet$Result %in% c("W","F") & DataSet$Server=="P"), filter(DataSet, DataSet$Result=="A" & DataSet$Server=="P"))
-  Choke<-rbind(filter(DataSet,DataSet$PointWinner=="O" & DataSet$PointLength=="S" & DataSet$Result %in% c("W","F") & DataSet$Server=="P"), filter(DataSet, DataSet$Result=="D" & DataSet$Server=="P"))
-  Null<-rbind(filter(DataSet, DataSet$ServeResult %in% c("F","S") & DataSet$PointLength %in% c("M","L") & DataSet$Server=="P"))
+  Clutch<-as.data.frame(rbind(filter(DataSet,DataSet$PointWinner=="P" & DataSet$PointLength=="S" & DataSet$Result %in% c("W","F") & DataSet$Server=="P"), filter(DataSet, DataSet$Result=="A" & DataSet$Server=="P")))
+  Choke<-as.data.frame(rbind(filter(DataSet,DataSet$PointWinner=="O" & DataSet$PointLength=="S" & DataSet$Result %in% c("W","F") & DataSet$Server=="P"), filter(DataSet, DataSet$Result=="D" & DataSet$Server=="P")))
+  Null<-as.data.frame(rbind(filter(DataSet, DataSet$ServeResult %in% c("F","S") & DataSet$PointLength %in% c("M","L") & DataSet$Server=="P")))
   #we Add an if here to catch when we run the LPcolum through Serving, sicne the situational weights of low pressure situations are 0. Here, if we find all the values are 0 we just use the dimensions in the calculation
-  if(sum(Clutch$SituationalWeight)+sum(Choke$SituationalWeight)+sum(Null$SituationalWeight) == 0){
-    Score<-dim(Clutch)[1]*W[1]+dim(Choke)[1]*W[2]+dim(Null)[1]*W[3]
-  }
-  else{
-    Score<-c(sum(Clutch$SituationalWeight)*W[1]+sum(Choke$SituationalWeight)*W[2]+sum(Null$SituationalWeight)*W[3])
-  }
+    Score<-c(sum(Clutch$SituationalWeight)*W[1]+sum(Choke$SituationalWeight)*W[2]+sum(Null$SituationalWeight)*W[3])/(dim(DataSet)[1])
   
   return(Score)
 }
@@ -476,14 +466,14 @@ Serving Score Applied to W/B/L D/A/J
 AppliedScoring<-function(Deuce, Ad, Joint, W=c(1,-1,0) ){
   DW<-ServingSore(filter(Deuce, Deuce$ServeLocation=="W"))
   DB<-ServingSore(filter(Deuce, Deuce$ServeLocation=="B"))
-  DL<-ServingSore(filter(Deuce, Deuce$ServeLocation=="L"))
+  DT<-ServingSore(filter(Deuce, Deuce$ServeLocation%in%c("L","C","T")))
   AW<-ServingSore(filter(Ad, Ad$ServeLocation=="W"))
   AB<-ServingSore(filter(Ad, Ad$ServeLocation=="B"))
-  AL<-ServingSore(filter(Ad, Ad$ServeLocation%in%c("L","C","T")))
+  AT<-ServingSore(filter(Ad, Ad$ServeLocation%in%c("L","C","T")))
   JW<-ServingSore(filter(Joint, Joint$ServeLocation=="W"))
   JB<-ServingSore(filter(Joint, Joint$ServeLocation=="B"))
-  JL<-ServingSore(filter(Joint, Joint$ServeLocation%in%c("L","C","T")))
-  AppliedScores<-c(DW, DB, DL, AL, AB, AW, JL, JB, JW)
+  JT<-ServingSore(filter(Joint, Joint$ServeLocation%in%c("L","C","T")))
+  AppliedScores<-c(DW, DB, DT, AT, AB, AW, JT, JB, JW)
   return(AppliedScores)
 }
 ```
@@ -543,6 +533,29 @@ FullServeMatrix<-function(DataSet,DataType="OldSQL"){
 ```
 
 ```{r}
+MiniServeMatrix<-function(DataSet,DataType="OldSQL"){
+  #Format the Matrix
+  WSVector<-matrix(nrow=1,ncol=9)
+
+  ServingData<-PServingOnly(DataSet)
+  colnames(ServingData)<-c("PlayerSets","OppSets","PlayerGames","OppGames","Server", "PlayerPoints", "OppPoints", "ServeResult", "ServeLocation", "ReturnLocation", "Result", "PointWinner", "PointLength")
+    
+  ServingData<-as.data.frame(cbind(ServingData,SituationalWeights(ServingData)))
+  colnames(ServingData)<-c("PlayerSets","OppSets","PlayerGames","OppGames","Server", "PlayerPoints", "OppPoints", "ServeResult", "ServeLocation", "ReturnLocation", "Result", "PointWinner", "PointLength", "SituationalWeights")
+  DAJ<-DeuceAdCreator(ServingData)
+    Deuce<-as.data.frame(DAJ[1])
+    Ad<-as.data.frame(DAJ[2])
+    Joint<-as.data.frame(DAJ[3])
+    
+  WSVector[1,]<-AppliedScoring(Deuce,Ad,Joint)
+  
+  colnames(WSVector)<-c("DWide", "DBody", "DT", "AT", "ABody", "AWide", "CT", "CBody", "CWide")
+  
+  return(WSVector)
+}
+```
+
+```{r}
 ServeTableMaker<-function(RawData){
   FData<-FormatData(RawData)
   TabData<-FullServeMatrix(FData)
@@ -564,18 +577,11 @@ ServeTableMaker<-function(RawData){
   }
 
   Even<-c(0,30)
-
-  #Coloring the columns in order, using the values we chose earlier for highs and lows
-  
-    #Assigning the values for our domains
-  ZeroToOne<-c(0,1)
-
-  #Coloring the columns in order, using the values we chose earlier for highs and lows
-  #FinTable<-data_color(FinTable,columns = "DWide", colors = scales::col_numeric(palette = "RdYlGn", domain = ZeroToOne))
       
   return(FinTable)
 }
 ```
+
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Here's our workspace after all the Functions~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -588,8 +594,40 @@ AllData<-rbind(read.csv("Women's Player Data Files/MJones18.csv"),
 
 
 
-ServeTableMaker(AllData)
+A<-ServeTableMaker(AllData)
+A
 ```
+
+Building the MiniServeTable
+```{r}
+WSOnly<-rbind(
+          MiniServeMatrix(FormatData(AllData)),
+          MiniServeMatrix(FormatData(read.csv("Women's Player Data Files/AAbramyan18.csv"))),
+          MiniServeMatrix(FormatData(read.csv("Women's Player Data Files/KCusick18.csv"))),
+          MiniServeMatrix(FormatData(read.csv("Women's Player Data Files/HKaur18.csv"))),
+          MiniServeMatrix(FormatData(read.csv("Women's Player Data Files/PMalykh18.csv"))),
+          MiniServeMatrix(FormatData(read.csv("Women's Player Data Files/SSmith18.csv"))))
+
+rownames(WSOnly)<-c("All Players","A. Abramyan", "K. Cusick", "H. Kaur", "P. Malykh", "S. Smith")
+
+ClutchCombo<-c(0.2845972,-0.0164179,0.4046875,0.625,0.6428571,-0.2571429)
+
+WSFinal<-cbind(ClutchCombo,WSOnly)
+
+ #Start the gt
+  WSFinalGT<-gt(as.data.frame(WSFinal), rownames_to_stub = TRUE)
+  
+    WSFinalGT <-
+      tab_header(data = WSFinalGT,title = "Distribution of Clutch Serving Scores")
+  
+  #Assigning the values for our domains
+  BaseCol<-c(-.2,.45)
+
+  #Coloring the columns in order, using the values we chose earlier for highs and lows
+  (WSFinalGT<-data_color(WSFinalGT,columns = c("DWide", "DBody", "DT", "AT", "ABody", "AWide", "CT", "CBody", "CWide"), colors = scales::col_numeric(palette = "RdYlGn", domain = BaseCol))) 
+          
+```
+
 
 RUNNING TO DO LIST:
 - Resolve the coloring issues
